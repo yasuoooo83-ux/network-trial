@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>情シス入門 ネットワーク実習</title>
+<style>
+:root{
+  --bg:#f3f5fa;--card:#fff;--ink:#1f2937;--sub:#6b7280;--line:#dfe3ec;
+  --navy:#12263f;--accent:#0f766e;--accent2:#14b8a6;--ok:#16a34a;--ng:#dc2626;--warn:#d97706;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Yu Gothic UI","Hiragino Sans","Meiryo",system-ui,sans-serif;font-size:15px;line-height:1.6}
+header{background:var(--navy);color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.02em}
+.badge{background:var(--accent);padding:2px 10px;border-radius:99px;font-size:12px}
+header .sp{flex:1}
+header button{background:transparent;color:#cbd5e1;border:1px solid #475569;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px}
+header button:hover{background:#1e3a5f}
+.hintcnt{font-size:12px;color:#cbd5e1}
+main{display:grid;gap:14px;padding:14px;max-width:1280px;margin:0 auto;
+  grid-template-columns:minmax(300px,400px) 1fr;grid-template-areas:"mission diagram" "mission panel"}
+#mission{grid-area:mission}#diagramwrap{grid-area:diagram}#panel{grid-area:panel}
+@media(max-width:860px){main{grid-template-columns:1fr;grid-template-areas:"mission" "diagram" "panel"}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.dots{display:flex;gap:6px;margin-bottom:8px;align-items:center;flex-wrap:wrap}
+.dots .lab{font-size:12px;color:var(--sub);margin-right:4px}
+.dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);background:#fff;font-size:12px;font-weight:700;
+  color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.dot.cur{border-color:var(--accent);color:var(--accent)}
+.dot.done{background:var(--ok);border-color:var(--ok);color:#fff}
+#mission h2{margin:2px 0 6px;font-size:18px;color:var(--navy)}
+.story{background:#f0fdfa;border-left:4px solid var(--accent2);padding:8px 12px;border-radius:0 8px 8px 0;margin:6px 0 10px;font-size:14px}
+h3{font-size:13px;margin:12px 0 4px;color:var(--sub);letter-spacing:.05em}
+table.sheet{border-collapse:collapse;width:100%;font-size:12.5px}
+table.sheet th,table.sheet td{border:1px solid var(--line);padding:3px 6px;text-align:left}
+table.sheet th{background:#f3f5fa}
+table.sheet td.m{font-family:Consolas,monospace}
+.note{font-size:12.5px;color:var(--sub);margin:4px 0}
+ul.goals{list-style:none;margin:0;padding:0}
+ul.goals li{display:flex;gap:8px;padding:4px 0;font-size:13.5px;border-bottom:1px dashed var(--line)}
+ul.goals .mk{flex:0 0 20px;height:20px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;margin-top:2px}
+ul.goals li.ok .mk{background:var(--ok);border-color:var(--ok)}
+ul.goals li.ok{color:var(--sub)}
+code,.mono{font-family:Consolas,"MS Gothic",monospace;background:#eef2f7;padding:0 4px;border-radius:4px;font-size:.95em}
+.hintbox{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:6px 10px;margin:4px 0;font-size:13.5px}
+button.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:14px;font-family:inherit}
+button.btn:hover{filter:brightness(1.1)}
+button.btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+button.btn:disabled{opacity:.5;cursor:default}
+.clear{background:#ecfdf5;border:2px solid var(--ok);border-radius:10px;padding:10px 12px;margin-top:12px}
+.clear h4{margin:0 0 4px;color:var(--ok);font-size:16px}
+.real{background:#fff;border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13.5px}
+.real b{color:var(--accent)}
+/* diagram */
+#diagram{width:100%;height:auto;display:block}
+#diagram g.node{cursor:pointer}
+#diagram .nbox{fill:#fff;stroke:#94a3b8;stroke-width:2}
+#diagram g.node.sel .nbox{stroke:var(--accent);stroke-width:4}
+#diagram g.node.conf .nbox{stroke:var(--ng);stroke-width:4}
+#diagram g.node.flash-ok .nbox{stroke:var(--ok);stroke-width:6;fill:#ecfdf5}
+#diagram g.node.flash-ng .nbox{stroke:var(--ng);stroke-width:6;fill:#fef2f2}
+#diagram text{font-family:inherit}
+#diagram .link{stroke:#64748b;stroke-width:3;fill:none}
+#diagram .lan{font-size:12px;fill:var(--sub)}
+.dim{opacity:.3}
+/* panel */
+#tabs{display:flex;gap:6px;flex-wrap:wrap}
+#tabs button{border:1px solid var(--line);background:#fff;border-radius:8px 8px 0 0;padding:6px 14px;cursor:pointer;font-size:14px;font-family:inherit}
+#tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+#tabs .st{display:inline-block;width:8px;height:8px;border-radius:50%;background:#cbd5e1;margin-right:6px}
+#tabs .st.conf{background:var(--ng)}
+#viewsw{display:flex;gap:6px;margin:10px 0}
+#viewsw button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:3px 14px;cursor:pointer;font-size:13px;font-family:inherit}
+#viewsw button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.win{border:1px solid #7a8aa3;background:#f0f0f0;border-radius:4px;max-width:560px;box-shadow:2px 3px 8px #0002;margin-bottom:10px}
+.win .wt{background:linear-gradient(#e8eef8,#cfdaec);padding:4px 10px;font-size:12.5px;border-bottom:1px solid #9fb0c8}
+.win .wb{padding:10px 14px}
+.win .wf{padding:8px 14px;text-align:right;border-top:1px solid #d0d0d0}
+.win label.r{display:block;margin:2px 0;font-size:13.5px}
+.fld{display:grid;grid-template-columns:190px 1fr;gap:4px 8px;align-items:center;margin:6px 0 6px 20px;font-size:13.5px}
+.fld.wide{margin-left:0;grid-template-columns:150px 1fr}
+.fld input[type=text]{font-family:Consolas,monospace;padding:3px 6px;border:1px solid #8a8a8a;border-radius:2px;width:100%;max-width:210px;font-size:14px}
+.fld input:disabled{background:#e4e4e4;color:#aaa}
+.win .sec{font-weight:700;font-size:13px;margin:10px 0 2px;color:#1e3a5f;border-bottom:1px solid #c6cfdd}
+.recrow{display:grid;grid-template-columns:1fr 150px;gap:6px;margin:3px 0}
+.recrow input{font-family:Consolas,monospace;padding:3px 6px;border:1px solid #8a8a8a;border-radius:2px;font-size:13px;width:100%}
+.msg{max-width:560px;border-radius:8px;padding:6px 10px;margin:6px 0;font-size:13.5px}
+.msg.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.msg.okm{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
+.msg.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.term{background:#0c0c0c;color:#cccccc;border-radius:8px;padding:10px;font-family:Consolas,"MS Gothic",monospace;font-size:13px;
+  height:340px;overflow:auto;white-space:pre-wrap;word-break:break-all;cursor:text}
+.termin{display:flex;gap:6px;background:#0c0c0c;color:#ccc;padding:0 10px 10px;border-radius:0 0 8px 8px;margin-top:-6px;font-family:Consolas,"MS Gothic",monospace;font-size:13px}
+.termin input{flex:1;background:transparent;border:0;outline:0;color:#fff;font:inherit}
+.tip{font-size:12.5px;color:var(--sub);margin:6px 0}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:99px;
+  font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9}
+#toast.show{opacity:1}
+
+/* tutorial */
+.tprog{font-size:12px;color:var(--sub)}
+.bar{height:6px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin:4px 0 8px}
+.bar i{display:block;height:100%;background:var(--accent2)}
+h3.stt{font-size:16px;color:var(--navy);letter-spacing:0;margin:6px 0}
+.tbox{border-radius:8px;padding:8px 12px;margin:8px 0;font-size:14px}
+.tbox p{margin:4px 0}.tbox ul{margin:4px 0 4px 18px;padding:0}
+.tbox>b:first-child{display:block;font-size:13px;margin-bottom:2px}
+.tbox.why{background:#eff6ff;border-left:4px solid #3b82f6}
+.tbox.do{background:#f0fdfa;border-left:4px solid var(--accent2)}
+.tbox.pred{background:#faf5ff;border-left:4px solid #a855f7}
+.tbox.ans{background:#ecfdf5;border-left:4px solid var(--ok)}
+.opt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;margin:4px 0;cursor:pointer;font-family:inherit;font-size:13.5px}
+.opt.sel{border-color:#a855f7;background:#f5f3ff}
+.opt.right{border-color:var(--ok);background:#ecfdf5}
+.opt.wrong{border-color:var(--ng);background:#fef2f2}
+.opt:disabled{cursor:default}
+.tnav{display:flex;gap:8px;margin-top:12px}
+.ipviz{margin:8px 0}
+.ipviz .row{margin:3px 0}
+.ipviz .o{display:inline-block;min-width:44px;text-align:center;padding:1px 6px;margin-right:4px;border-radius:6px;font-family:Consolas,monospace;font-weight:700}
+.ipviz .net,.o.net{background:#dbeafe;color:#1e40af}
+.ipviz .host,.o.host{background:#ffedd5;color:#9a3412}
+.ipviz .lb{font-size:12px;color:var(--sub);margin-left:6px}
+.ipviz .cap{font-size:12.5px;color:var(--sub);margin-top:4px}
+.tbox.chal{background:#fff7ed;border-left:4px solid #f97316}
+/* browser */
+.browser{border:1px solid #9aa7bd;border-radius:10px;overflow:hidden;max-width:640px;background:#fff;box-shadow:2px 3px 8px #0002;margin-bottom:8px}
+.bbar{display:flex;gap:6px;align-items:center;background:#e8edf6;padding:6px 8px;border-bottom:1px solid #c6cfdd}
+.bbar input{flex:1;min-width:0;font-family:Consolas,monospace;font-size:14px;padding:5px 10px;border:1px solid #9aa7bd;border-radius:99px}
+.bsec{font-size:12px;white-space:nowrap;color:var(--sub)}
+.bsec.ok{color:var(--ok)}.bsec.warn{color:var(--warn)}.bsec.ng{color:var(--ng)}
+.bpage{padding:16px 20px;min-height:210px;font-size:14px}
+.bpage h1{font-size:20px;margin:0 0 8px;color:var(--navy)}
+.bpage ul{margin:6px 0 6px 20px;padding:0}
+.errpage{color:#444}.errpage .ico{font-size:38px}
+.errpage h1{font-size:19px}
+.errpage code{display:inline-block;margin-top:8px}
+/* quiz / calc */
+.tbox.quiz{background:#f4f8ff;border:1px solid #b9cdf0}
+.qi{margin:10px 0;padding:8px 10px;background:#fff;border:1px solid #d5e0f3;border-radius:8px}
+.ql{margin-bottom:6px}
+.qin{font-family:Consolas,monospace;font-size:15px;padding:5px 8px;width:150px;border:1px solid #9aa7bd;border-radius:6px}
+.qo{display:block;margin:3px 0;cursor:pointer}
+.qm{margin-left:10px;font-weight:700}.qm.ok{color:var(--ok)}.qm.ng{color:var(--ng)}
+.qhint{margin-top:6px;padding:6px 8px;background:#fff7e0;border:1px solid #f0d58a;border-radius:6px;font-size:13px}
+.qexp{margin-top:6px;padding:6px 8px;background:#eaf8ee;border:1px solid #a8dcb5;border-radius:6px;font-size:13px}
+.calc .fld{margin-bottom:8px}
+.calc input{font-family:Consolas,monospace;font-size:15px;padding:5px 8px;border:1px solid #9aa7bd;border-radius:6px;margin:0 10px 0 4px;width:150px}
+.bitrow{margin:8px 0}.bl{display:block;font-size:12px;color:var(--sub);margin-bottom:2px}
+.bits{font-family:Consolas,monospace;font-size:16px;letter-spacing:1px}
+.bit{display:inline-block;width:14px;text-align:center;border-radius:3px;margin:0 1px;color:#fff}
+.bit.net{background:#2b6fd6}.bit.host{background:#e8871a}
+.dotc{margin:0 2px;color:#555}
+table.calct{border-collapse:collapse;margin-top:8px;font-size:14px}
+table.calct th{background:#eef2fa;text-align:left;padding:5px 10px;border:1px solid #c6cfdd;white-space:nowrap}
+table.calct td{padding:5px 10px;border:1px solid #c6cfdd}
+table.calct td.m{font-family:Consolas,monospace}
+/* notes */
+#notes{position:fixed;inset:0;background:#0007;z-index:50;display:none;align-items:center;justify-content:center;padding:12px}
+#notes.show{display:flex}
+#notes .np{background:var(--card,#fff);color:inherit;width:min(860px,100%);max-height:94vh;overflow:auto;border-radius:12px;padding:14px 18px;box-shadow:0 8px 30px #0006}
+#notes .nh{display:flex;justify-content:space-between;align-items:center;position:sticky;top:-14px;background:inherit;padding:6px 0;z-index:1}
+#notes details{border:1px solid var(--line,#d5dbe6);border-radius:8px;margin:6px 0;padding:4px 10px}
+#notes details details{margin:4px 0;background:#00000006}
+#notes summary{cursor:pointer;font-weight:700;padding:3px 0}
+#notes .st-ok{color:var(--ok,#16a34a)}#notes .st-ing{color:#b45309}#notes .st-no{color:#94a3b8}
+#notes .nb{padding:4px 0 8px;font-size:14px}
+#notes .nb .ans{background:#eaf8ee;border-radius:6px;padding:6px 10px;margin-top:6px}
+.tbox.diff summary{cursor:pointer;font-weight:700}.tbox.diff{background:#fafafa}
+</style>
+</head>
+<body>
+<header>
+  <h1>🖧 情シス入門 ネットワーク実習 <small style="font-size:12px;font-weight:400;opacity:.85">〜「つながらない！」を自分で直せるようになる〜</small></h1>
+  <span class="badge">個人演習：1人で4台すべてを操作</span>
+  <span class="sp"></span>
+  <button class="btn ghost" id="notesbtn" style="padding:2px 10px;font-size:12px" onclick="openNotes()">📖 学習ノート</button> <button class="btn ghost" id="testbtn" style="display:none;padding:2px 10px;font-size:12px" onclick="toggleTest()"></button> <span class="hintcnt" id="hintcnt"></span>
+  <button onclick="resetAll()">最初からやり直す</button>
+</header>
+<main>
+  <section id="mission" class="card"></section>
+  <section id="diagramwrap" class="card"><svg id="diagram" viewBox="0 0 760 330"></svg>
+    <div class="tip">機器をクリックするとその機器の画面に切り替わります。pingが通ると機器が緑に光ります。</div></section>
+  <section id="panel" class="card">
+    <div id="tabs"></div>
+    <div id="viewsw"></div>
+    <div id="pbody"></div>
+  </section>
+</main>
+<div id="notes" onclick="if(event.target===this)closeNotes()"></div>
+<div id="toast"></div>
+
+<script>
+// ===ENGINE START
+const DEVS={
+  router:{label:'ルータ',kind:'router',ttl:255},
+  server:{label:'サーバ',kind:'server',ttl:128,seg:'LAN1'},
+  pc1:{label:'PC①',kind:'pc',ttl:128,seg:'LAN1'},
+  pc2:{label:'PC②',kind:'pc',ttl:128,seg:'LAN2'}
+};
+const MAC={router:'AA-BB-CC-00-00-01',server:'AA-BB-CC-00-00-10',pc1:'AA-BB-CC-00-00-11',pc2:'AA-BB-CC-00-00-21'};
+
+function freshState(){
+  return {mission:0,cleared:{},setupDone:{},hints:{},hintsUsed:0,pings:[],webs:[],calcs:[],tutM:{},
+    hist:{router:[],server:[],pc1:[],pc2:[]},
+    dev:{
+      router:{if1:{ip:'',mask:'255.255.255.0'},if2:{ip:'',mask:'255.255.255.0'},fwd:false},
+      server:{ip:'',mask:'255.255.255.0',gw:'',
+        dhcp:{on:false,start:'',end:'',mask:'255.255.255.0',gw:'',dns:''},dnsSvc:{on:false,records:[]},web:{http:false,httpPort:'80',https:false,httpsPort:'443'}},
+      pc1:{mode:'manual',ip:'',mask:'255.255.255.0',gw:'',dns:'',lease:null,apipa:'169.254.37.112'},
+      pc2:{mode:'manual',ip:'',mask:'255.255.255.0',gw:'',dns:'',lease:null,apipa:'169.254.201.8'}
+    }};
+}
+
+const ip2n=s=>{const m=/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec((s||'').trim());
+  if(!m)return null;const p=m.slice(1).map(Number);if(p.some(x=>x>255))return null;
+  return p[0]*16777216+p[1]*65536+p[2]*256+p[3];};
+const n2ip=n=>[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join('.');
+const maskOk=m=>{const n=ip2n(m);if(n===null||n===0)return false;const inv=(~n)>>>0;return ((inv&(inv+1))>>>0)===0;};
+const sameNet=(a,b,mask)=>{const x=ip2n(a),y=ip2n(b),m=ip2n(mask);if(x===null||y===null||m===null)return false;
+  return ((x&m)>>>0)===((y&m)>>>0);};
+const validIf=i=>ip2n(i.ip)!==null&&maskOk(i.mask);
+
+// 有効なネットワーク設定（DHCP取得中ならリース内容、失敗なら自動構成IP）
+function eff(S,id){
+  const d=S.dev[id];
+  if(id==='router')return {ifs:[{n:'if1',seg:'LAN1',ip:d.if1.ip,mask:d.if1.mask},{n:'if2',seg:'LAN2',ip:d.if2.ip,mask:d.if2.mask}],gw:'',dns:''};
+  const seg=DEVS[id].seg;
+  if(d.mode==='dhcp'){
+    if(d.lease)return {ifs:[{n:'eth',seg,ip:d.lease.ip,mask:d.lease.mask}],gw:d.lease.gw,dns:d.lease.dns,dhcp:true};
+    return {ifs:[{n:'eth',seg,ip:d.apipa,mask:'255.255.0.0'}],gw:'',dns:'',dhcp:true,apipa:true};
+  }
+  return {ifs:[{n:'eth',seg,ip:d.ip,mask:d.mask}],gw:d.gw,dns:d.dns||''};
+}
+function ownersOn(S,seg,ip){
+  const r=[];
+  for(const id of Object.keys(DEVS)){
+    if(eff(S,id).ifs.some(i=>i.seg===seg&&validIf(i)&&i.ip===ip))r.push(id);
+  }
+  return r;
+}
+function conflicts(S){
+  const res=[];
+  for(const seg of ['LAN1','LAN2']){
+    const map={};
+    for(const id of Object.keys(DEVS)){
+      for(const i of eff(S,id).ifs){
+        if(i.seg===seg&&validIf(i)){(map[i.ip]=map[i.ip]||[]).push(id);}
+      }
+    }
+    for(const ip in map){if(map[ip].length>1)res.push({seg,ip,devs:map[ip]});}
+  }
+  return res;
+}
+
+// 1方向の配送判定
+function deliver(S,src,dst){
+  const e=eff(S,src),ifs=e.ifs.filter(validIf);
+  if(ip2n(dst)===null||!ifs.length)return {ok:false,kind:'general',from:''};
+  const own=ifs.find(i=>i.ip===dst);
+  if(own)return {ok:true,dev:src,hops:[],local:true};
+  const on=ifs.find(i=>sameNet(i.ip,dst,i.mask));
+  if(on){
+    const ow=ownersOn(S,on.seg,dst).filter(x=>x!==src);
+    if(!ow.length)return {ok:false,kind:'hostunreach',from:on.ip};
+    return {ok:true,dev:ow[0],hops:[],srcIp:on.ip,conflict:ow.length>1};
+  }
+  if(src==='router')return {ok:false,kind:'netunreach',from:ifs[0].ip};
+  const gw=e.gw;
+  const gif=(ip2n(gw)!==null)?ifs.find(i=>sameNet(i.ip,gw,i.mask)):null;
+  if(!gif)return {ok:false,kind:'general',from:ifs[0].ip};
+  const go=ownersOn(S,gif.seg,gw).filter(x=>x!==src);
+  if(!go.length)return {ok:false,kind:'hostunreach',from:gif.ip};
+  if(DEVS[go[0]].kind!=='router')return {ok:false,kind:'timeout'};
+  const rifs=eff(S,'router').ifs.filter(validIf);
+  const self=rifs.find(i=>i.ip===dst);
+  if(self)return {ok:true,dev:'router',hops:[],srcIp:gif.ip,viaIp:gw};
+  if(!S.dev.router.fwd)return {ok:false,kind:'timeout'};
+  const out=rifs.find(i=>sameNet(i.ip,dst,i.mask));
+  if(!out)return {ok:false,kind:'netunreach',from:gw};
+  const ow=ownersOn(S,out.seg,dst).filter(x=>x!=='router');
+  if(!ow.length)return {ok:false,kind:'hostunreach',from:gw};
+  return {ok:true,dev:ow[0],hops:['router'],viaIp:gw,srcIp:gif.ip,conflict:ow.length>1};
+}
+// 行き＋帰り
+function ping1(S,src,dst){
+  const f=deliver(S,src,dst);
+  if(!f.ok)return f;
+  if(f.local)return {ok:true,dev:src,ttl:DEVS[src].ttl,hops:[],path:[src]};
+  const b=deliver(S,f.dev,f.srcIp);
+  if(!b.ok)return {ok:false,kind:'timeout'};
+  return {ok:true,dev:f.dev,ttl:DEVS[f.dev].ttl-b.hops.length,hops:f.hops,viaIp:f.viaIp,
+    conflict:!!(f.conflict||b.conflict),path:[src,...f.hops,f.dev]};
+}
+// DNS名前解決
+function resolve(S,id,name){
+  const dns=eff(S,id).dns;
+  if(!dns||ip2n(dns)===null)return {ok:false,kind:'nodns'};
+  const r=ping1(S,id,dns);
+  if(!r.ok)return {ok:false,kind:'dnstimeout'};
+  if(r.dev!=='server'||!S.dev.server.dnsSvc.on)return {ok:false,kind:'dnstimeout'};
+  const rec=S.dev.server.dnsSvc.records.find(x=>x.name.trim().toLowerCase()===name.toLowerCase());
+  if(!rec)return {ok:false,kind:'nxdomain',server:dns};
+  return {ok:true,ip:rec.ip.trim(),server:dns};
+}
+// DHCP取得
+function renew(S,id){
+  const d=S.dev[id];d.lease=null;
+  if(d.mode!=='dhcp')return {ok:false,msg:'固定IP設定です'};
+  const seg=DEVS[id].seg,sv=S.dev.server,se=eff(S,'server').ifs[0];
+  if(seg!=='LAN1'||!sv.dhcp.on||!validIf(se))return {ok:false,msg:'DHCPサーバーに接続できません'};
+  const a=ip2n(sv.dhcp.start),b=ip2n(sv.dhcp.end),dm=(sv.dhcp.mask||'').trim();
+  if(a===null||b===null||a>b||!maskOk(dm))return {ok:false,msg:'DHCPサーバーに接続できません'};
+  const dmn=ip2n(dm);
+  const used=new Set();
+  for(const o of Object.keys(DEVS)){if(o===id)continue;
+    for(const i of eff(S,o).ifs){if(i.seg===seg&&validIf(i))used.add(i.ip);}}
+  for(let x=a;x<=b&&x-a<1024;x++){
+    const ip=n2ip(x);
+    const scopeNet=((x&dmn)>>>0),scopeBc=((scopeNet|((~dmn)>>>0))>>>0);
+    if(!used.has(ip)&&x!==scopeNet&&x!==scopeBc&&sameNet(ip,se.ip,se.mask)){
+      d.lease={ip,mask:dm,gw:(sv.dhcp.gw||'').trim(),dns:(sv.dhcp.dns||'').trim()};
+      return {ok:true,msg:'取得しました'};
+    }
+  }
+  return {ok:false,msg:'DHCPサーバーに接続できません'};
+}
+
+// ---- コマンド（日本語版Windows風） ----
+function parseTarget(S,id,argv){
+  let n=4,target=null;
+  for(let i=0;i<argv.length;i++){const a=argv[i];
+    if(a==='-n'&&argv[i+1]){n=Math.max(1,Math.min(10,parseInt(argv[++i])||4));}
+    else if(!a.startsWith('-'))target=a;}
+  return {n,target};
+}
+function planPing(S,id,argv){
+  const {n,target}=parseTarget(S,id,argv);
+  if(!target)return {head:['使用法: ping [-n 回数] ターゲット名'],replies:[],tail:[]};
+  let dst=target,label=target,loop=false,nm=null;
+  if(/^127\.\d+\.\d+\.\d+$/.test(target)||target.toLowerCase()==='localhost'){loop=true;dst='127.0.0.1';
+    label=target.toLowerCase()==='localhost'?'localhost [127.0.0.1]':target;}
+  else if(ip2n(target)===null){
+    const r=resolve(S,id,target);
+    if(!r.ok)return {head:['ping 要求ではホスト '+target+' が見つかりませんでした。名前を確認して再実行してください。'],replies:[],tail:[],meta:{dst:target,name:target,okc:0,n:0,conflict:false,nores:true}};
+    dst=r.ip;nm=target;label=target+' ['+dst+']';
+  }
+  const head=['',label+' に ping を送信しています 32 バイトのデータ:'];
+  const replies=[];let recv=0,okc=0,anyConf=false;
+  for(let i=0;i<n;i++){
+    let res=loop?{ok:true,ttl:DEVS[id].ttl,path:[id]}:ping1(S,id,dst);
+    if(res.conflict)anyConf=true;
+    if(res.ok&&res.conflict&&i%2===1)res={ok:false,kind:'timeout'};
+    let text;
+    if(res.ok){text=dst+' からの応答: バイト数 =32 時間 <1ms TTL='+res.ttl;recv++;okc++;replies.push({text,ok:true,path:res.path});continue;}
+    if(res.kind==='timeout')text='要求がタイムアウトしました。';
+    else if(res.kind==='hostunreach'){text=res.from+' からの応答: 宛先ホストに到達できません。';recv++;}
+    else if(res.kind==='netunreach'){text=res.from+' からの応答: 宛先ネットワークに到達できません。';recv++;}
+    else text='PING: 転送に失敗しました。General failure。';
+    replies.push({text,ok:false,path:[id]});
+  }
+  const tail=['',dst+' の ping 統計:',
+    '    パケット数: 送信 = '+n+'、受信 = '+recv+'、損失 = '+(n-recv)+' ('+Math.round((n-recv)/n*100)+'% の損失)、'];
+  if(okc>0){tail.push('ラウンド トリップの概算時間 (ミリ秒):','    最小 = 0ms、最大 = 0ms、平均 = 0ms');}
+  return {head,replies,tail,meta:{dst,name:nm,okc,n,conflict:anyConf}};
+}
+function planTracert(S,id,argv){
+  const target=argv.filter(a=>!a.startsWith('-'))[0];
+  if(!target)return ['使用法: tracert ターゲット名'];
+  let dst=target,label=target;
+  if(ip2n(target)===null){
+    const r=resolve(S,id,target);
+    if(!r.ok)return ['ターゲット名 '+target+' を解決できません。'];
+    dst=r.ip;label=target+' ['+dst+']';
+  }
+  const L=['',label+' へのルートをトレースしています','最大 30 ホップ:',''];
+  const res=ping1(S,id,dst);
+  const row=(n,ip)=>('  '+n).slice(-3)+'    <1 ms    <1 ms    <1 ms  '+ip;
+  if(res.ok){
+    let k=1;
+    if(res.hops.length)L.push(row(k++,res.viaIp));
+    if(res.dev!==id&&!(res.hops.length===0&&res.dev==='router'&&res.viaIp===dst))L.push(row(k,dst));
+    else if(res.dev==='router'&&res.viaIp===dst){/* ルータ自身: 1ホップ目で到達済み */}
+    L.push('','トレースを完了しました。');
+  }else{
+    for(let k=1;k<=3;k++)L.push(('  '+k).slice(-3)+'     *        *        *     要求がタイムアウトしました。');
+    L.push('（以降のホップも応答がないため省略します）');
+  }
+  return L;
+}
+function planNslookup(S,id,argv){
+  const name=argv[0];
+  if(!name)return ['対話モードは未対応です。 nslookup 名前 の形式で使ってください。'];
+  if(ip2n(name)!==null)return ['*** UnKnown が '+name+' を見つけられません: Non-existent domain'];
+  const r=resolve(S,id,name);
+  if(r.ok)return ['サーバー:  UnKnown','Address:  '+r.server,'','名前:    '+name,'Address:  '+r.ip,''];
+  if(r.kind==='nodns')return ['*** 既定のサーバーが利用できません'];
+  if(r.kind==='dnstimeout')return ['DNS request timed out.','    timeout was 2 seconds.','*** UnKnown への要求がタイムアウトしました'];
+  return ['サーバー:  UnKnown','Address:  '+r.server,'','*** UnKnown が '+name+' を見つけられません: Non-existent domain'];
+}
+function ipconfigLines(S,id,all){
+  const e=eff(S,id),i=e.ifs[0],d=S.dev[id],ok=validIf(i);
+  const L=['','Windows IP 構成','','','イーサネット アダプター イーサネット:',''];
+  if(all){L.push('   物理アドレス. . . . . . . . . . . . .: '+MAC[id]);
+    L.push('   DHCP 有効 . . . . . . . . . . . . . .: '+(d.mode==='dhcp'?'はい':'いいえ'));}
+  if(ok)L.push('   '+(e.apipa?'自動構成 IPv4 アドレス. . . . . . . .: ':'IPv4 アドレス . . . . . . . . . . . .: ')+i.ip+'(優先)');
+  if(ok)L.push('   サブネット マスク . . . . . . . . . .: '+i.mask);
+  L.push('   デフォルト ゲートウェイ . . . . . . .: '+(e.gw||''));
+  if(all){
+    if(d.mode==='dhcp'&&d.lease)L.push('   DHCP サーバー . . . . . . . . . . . .: '+eff(S,'server').ifs[0].ip);
+    L.push('   DNS サーバー. . . . . . . . . . . . .: '+(e.dns||''));
+  }
+  L.push('');
+  return L;
+}
+function runIpconfig(S,id,argv){
+  const a=(argv[0]||'').toLowerCase();
+  if(a==='/all')return ipconfigLines(S,id,true);
+  if(a==='/renew'||a==='/release'){
+    const d=S.dev[id];
+    if(d.mode!=='dhcp')return ['','インターフェイス イーサネット は DHCP が有効ではありません。',''];
+    if(a==='/release'){d.lease=null;return ['','Windows IP 構成','','イーサネット アダプター イーサネット は解放されました。',''];}
+    const r=renew(S,id);
+    if(!r.ok)return ['','Windows IP 構成','','インターフェイス イーサネット の更新中にエラーが発生しました: DHCP サーバーに接続できません。要求がタイムアウトしました。',''];
+    return ipconfigLines(S,id,false);
+  }
+  if(a&&a!=='')return ['','使用法: ipconfig [/all | /renew | /release]',''];
+  return ipconfigLines(S,id,false);
+}
+// ルータ（Cisco風）
+function planPingRouter(S,argv){
+  const t=argv[0];
+  if(!t)return ['% Incomplete command.'];
+  if(ip2n(t)===null)return ['% Unrecognized host or address, or protocol not running.'];
+  let s='',k=0,cf=false;
+  for(let i=0;i<5;i++){
+    const r=ping1(S,'router',t);
+    if(r.conflict)cf=true;
+    if(r.ok&&!(r.conflict&&i%2===1)){s+='!';k++;}
+    else if(r.kind==='hostunreach'||r.kind==='netunreach')s+='U';
+    else s+='.';
+  }
+  const L=['Type escape sequence to abort.','Sending 5, 100-byte ICMP Echos to '+t+', timeout is 2 seconds:',s,
+    'Success rate is '+Math.round(k/5*100)+' percent ('+k+'/5)'+(k>0?', round-trip min/avg/max = 1/1/1 ms':'')];
+  L.meta={dst:t,okc:k,n:5,conflict:cf};
+  return L;
+}
+function routerBrief(S){
+  const r=S.dev.router,pad=(s,n)=>(s+' '.repeat(n)).slice(0,n);
+  const row=(n,i)=>pad(n,23)+pad(ip2n(i.ip)!==null?i.ip:'unassigned',16)+'YES '+pad(ip2n(i.ip)!==null?'manual':'unset',7)+pad('up',22)+'up';
+  return [pad('Interface',23)+pad('IP-Address',16)+'OK? '+pad('Method',7)+pad('Status',22)+'Protocol',
+    row('GigabitEthernet0/0',r.if1),row('GigabitEthernet0/1',r.if2)];
+}
+
+// ---- Web（HTTP/HTTPS） ----
+const WEB_PAGES={
+  '/':{title:'とよしょう商事 社内ポータル',lines:['お知らせ','勤怠入力','社内掲示板']},
+  '/index.html':{title:'とよしょう商事 社内ポータル',lines:['お知らせ','勤怠入力','社内掲示板']},
+  '/news.html':{title:'お知らせ',lines:['10月：避難訓練のお知らせ','11月：システム点検（ネットワーク停止あり）']}
+};
+function parseUrl(u){
+  const m=/^(?:(https?):\/\/)?([^\/:\s]+)(?::(\d{1,5}))?(\/\S*)?$/i.exec((u||'').trim());
+  if(!m)return null;
+  const scheme=(m[1]||'http').toLowerCase();
+  const port=m[3]?parseInt(m[3],10):(scheme==='https'?443:80);
+  if(port<1||port>65535)return null;
+  return {scheme,host:m[2].toLowerCase(),port,portGiven:!!m[3],path:m[4]||'/'};
+}
+// ブラウザ／curl 共通：名前解決 → 到達（ping と同じ経路判定）→ ポート → 証明書 → ページ
+function httpGet(S,id,url,opt){
+  opt=opt||{};
+  const u=parseUrl(url);
+  if(!u)return {kind:'badurl',url:(url||'').trim(),scheme:'',host:'',port:0,path:''};
+  const res=Object.assign({kind:'',url:u.scheme+'://'+u.host+(u.portGiven?':'+u.port:'')+u.path},u);
+  const isIp=ip2n(u.host)!==null;
+  if(u.host==='localhost'||/^127\./.test(u.host)){res.kind='refused';res.route=[id];return res;}
+  let dst=u.host;
+  if(!isIp){
+    const r=resolve(S,id,u.host);
+    if(!r.ok){res.kind='noname';res.why=r.kind;return res;}
+    dst=r.ip;
+  }
+  const pr=ping1(S,id,dst);
+  if(!pr.ok){res.kind='timeout';res.why=pr.kind;return res;}
+  res.route=pr.path;res.dst=dst;
+  if(pr.dev!=='server'){res.kind='refused';return res;}
+  const w=S.dev.server.web,P=String(u.port);
+  const hOn=!!w.http&&P===String(parseInt(w.httpPort,10));
+  const sOn=!!w.https&&P===String(parseInt(w.httpsPort,10));
+  if(u.scheme==='http'){
+    if(sOn){res.kind='badreq';res.status=400;return res;}
+    if(!hOn){res.kind='refused';return res;}
+  }else{
+    if(hOn){res.kind='sslerr';return res;}
+    if(!sOn){res.kind='refused';return res;}
+    if(isIp&&!opt.insecure){res.kind='cert';return res;}
+  }
+  const pg=WEB_PAGES[u.path.split('?')[0]];
+  if(pg){res.kind='ok';res.status=200;res.page=pg;}
+  else{res.kind='notfound';res.status=404;}
+  return res;
+}
+function logWeb(S,id,r,via){
+  if(!r)return;
+  S.webs.push({src:id,via:via||'',url:r.url,scheme:r.scheme,host:r.host,port:r.port,kind:r.kind,insecure:!!r.insecure,incl:!!r.incl});
+  if(S.webs.length>1000)S.webs.shift();
+}
+const webd=(S,c,src,pr)=>S.webs.slice(c.w||0).some(p=>p.src===src&&pr(p));
+function planCurl(S,id,argv){
+  let incl=false,head=false,ins=false,url=null;
+  for(const a of argv){
+    if(a==='-i')incl=true;
+    else if(a==='-I')head=true;
+    else if(a==='-k'||a==='--insecure')ins=true;
+    else if(!a.startsWith('-'))url=a;
+  }
+  if(!url)return {lines:["curl: try 'curl --help' for more information"],res:null};
+  const r=httpGet(S,id,url,{insecure:ins});
+  r.incl=incl||head;
+  r.insecure=ins&&r.kind==='ok'&&r.scheme==='https'&&ip2n(r.host)!==null;
+  const L=[],h=r.host,p=r.port;
+  const resp=(code,text,body)=>{
+    if(incl||head)L.push('HTTP/1.1 '+code+' '+text,'Content-Type: text/html; charset=UTF-8','Content-Length: '+body.join('').length,'');
+    if(!head)body.forEach(x=>L.push(x));
+  };
+  switch(r.kind){
+    case 'ok':{const pg=r.page;
+      resp(200,'OK',['<html><head><title>'+pg.title+'</title></head>','<body><h1>'+pg.title+'</h1>','<ul>'+pg.lines.map(x=>'<li>'+x+'</li>').join('')+'</ul></body></html>']);break;}
+    case 'notfound':resp(404,'Not Found',['<html><body><h1>404 Not Found</h1></body></html>']);break;
+    case 'badreq':resp(400,'Bad Request',['<html><body><h1>400 Bad Request</h1><p>The plain HTTP request was sent to HTTPS port</p></body></html>']);break;
+    case 'noname':L.push('curl: (6) Could not resolve host: '+h);break;
+    case 'timeout':L.push('curl: (28) Failed to connect to '+h+' port '+p+' after 21043 ms: Timed out');break;
+    case 'refused':L.push('curl: (7) Failed to connect to '+h+' port '+p+' after 2 ms: Could not connect to server');break;
+    case 'sslerr':L.push('curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed');break;
+    case 'cert':L.push('curl: (60) schannel: SNI or certificate check failed: SEC_E_WRONG_PRINCIPAL','（証明書の名前が一致しません。-k を付けると警告を無視して接続できます）');break;
+    default:L.push('curl: (3) URL rejected: Malformed input to a URL function');
+  }
+  return {lines:L,res:r};
+}
+
+// ---- サブネット計算・計算問題 ----
+const _fw=s=>String(s==null?'':s).trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/．/g,'.').replace(/／/g,'/');
+// "/26" "26" "255.255.255.192" のどれでもプレフィックス長(0〜32)にする。不正なら null
+function parsePrefix(s){
+  s=_fw(s);
+  const m=/^\/?\s*(\d{1,2})$/.exec(s);
+  if(m){const p=parseInt(m[1],10);return p>=0&&p<=32?p:null;}
+  if(ip2n(s)!==null&&maskOk(s)){let n=ip2n(s),c=0;while(n&0x80000000){c++;n=(n<<1)>>>0;}return c;}
+  return null;
+}
+const pmask=p=>p<=0?0:((0xFFFFFFFF<<(32-p))>>>0);
+function subnetInfo(ipStr,p){
+  const ip=ip2n(ipStr),m=pmask(p),net=(ip&m)>>>0,bc=(net|((~m)>>>0))>>>0,h=32-p,tot=Math.pow(2,h);
+  const usable=p>=31?(p===31?2:1):tot-2;
+  return {ip,mask:m,net,bc,h,tot,usable,first:p>=31?net:net+1,last:p>=31?bc:bc-1};
+}
+// 32ビットを1ビットずつ色分け（ネットワーク部＝青、ホスト部＝橙）
+function bitsHtml(ipStr,p){
+  const n=ip2n(ipStr);let h='';
+  for(let i=0;i<32;i++){
+    h+='<span class="bit '+(i<p?'net':'host')+'">'+((n>>>(31-i))&1)+'</span>';
+    if(i%8===7&&i<31)h+='<span class="dotc">.</span>';
+  }
+  return h;
+}
+// ---- 計算問題（答え入力と自動採点） ----
+function qNorm(it,raw){
+  const v=_fw(raw);
+  if(it.type==='num'){const x=v.replace(/[台,\s]/g,'');return /^\d+$/.test(x)?parseInt(x,10):null;}
+  if(it.type==='prefix')return parsePrefix(v);
+  if(it.type==='choice')return /^\d+$/.test(v)?parseInt(v,10):null;
+  return v;
+}
+function qCheck(S,k,idx){
+  const st=MISSIONS[k].tutorial[idx],t=tstate(S,k);
+  const A=t.quiz[idx]||{},ok={};let all=true;
+  st.quiz.items.forEach(it=>{const x=qNorm(it,A[it.id]);const good=x!==null&&x===it.answer;ok[it.id]=good;if(!good)all=false;});
+  t.qok[idx]=ok;t.qtry[idx]=(t.qtry[idx]||0)+1;
+  return all;
+}
+function quizAllOk(S,k,idx){
+  const st=MISSIONS[k].tutorial[idx];if(!st||!st.quiz)return true;
+  const O=tstate(S,k).qok[idx]||{};
+  return st.quiz.items.every(it=>O[it.id]===true);
+}
+
+// ---- ミッション（すべてチュートリアル形式） ----
+const same=(a,b)=>(a||'').trim()===b;
+const cfg=(S,id,ip,mask,gw)=>{const d=S.dev[id];return d.mode!=='dhcp'&&same(d.ip,ip)&&same(d.mask,mask)&&(gw===undefined||same(d.gw,gw));};
+const M24='255.255.255.0';
+// そのステップを開いてから行った操作だけを数える
+const pinged=(S,c,src,dst,pr)=>S.pings.slice(c.from||0).some(p=>p.src===src&&p.dst===dst&&pr(p));
+const pingedName=(S,c,src,name,pr)=>S.pings.slice(c.from||0).some(p=>p.src===src&&p.name===name&&pr(p));
+const ranc=(S,c,id,re)=>S.hist[id].slice((c.h&&c.h[id])||0).some(x=>re.test(x));
+const dhcpCfg=S=>{const d=S.dev.server.dhcp;return d.on&&same(d.start,'192.168.1.100')&&same(d.end,'192.168.1.150')&&same(d.gw,'192.168.1.1')&&same(d.dns,'192.168.1.10')&&same(d.mask,M24);};
+const inPool=S=>{const l=S.dev.pc1.lease;if(S.dev.pc1.mode!=='dhcp'||!l)return false;const x=ip2n(l.ip);return x>=ip2n('192.168.1.100')&&x<=ip2n('192.168.1.150');};
+const recOf=(S,name)=>S.dev.server.dnsSvc.records.find(r=>r.name.trim().toLowerCase()===name);
+
+function logPing(S,id,meta){
+  if(!meta)return;
+  S.pings.push({src:id,dst:meta.dst,name:meta.name||null,ok:meta.okc>0,okc:meta.okc,n:meta.n,conflict:!!meta.conflict,nores:!!meta.nores,fwd:!!S.dev.router.fwd,gw:eff(S,id).gw||'',sip:(eff(S,id).ifs[0]||{}).ip||'',smask:(eff(S,id).ifs[0]||{}).mask||''});
+  if(S.pings.length>1000)S.pings.shift();
+}
+function tstate(S,k){
+  const t=S.tutM[k]||(S.tutM[k]={});
+  if(t.step==null)t.step=0;
+  t.pred=t.pred||{};t.hint=t.hint||{};t.entered=t.entered||{};t.pf=t.pf||{};t.hf=t.hf||{};t.wf=t.wf||{};t.cf=t.cf||{};t.snap=t.snap||{};t.quiz=t.quiz||{};t.qok=t.qok||{};t.qtry=t.qtry||{};
+  return t;
+}
+function ctxFor(S,k,idx){const t=tstate(S,k);return {from:t.pf[idx]||0,h:t.hf[idx]||{},w:t.wf[idx]||0,cl:t.cf[idx]||0};}
+function stepDone(S,k,idx){
+  const st=MISSIONS[k].tutorial[idx];if(!st)return false;
+  const t=tstate(S,k);
+  if(st.predict&&t.pred[idx]==null)return false;
+  if(st.quiz&&!quizAllOk(S,k,idx))return false;
+  const c=ctxFor(S,k,idx);
+  return st.subs.every(x=>x.f(S,c));
+}
+function enterStep(S,k,idx){
+  const t=tstate(S,k),st=MISSIONS[k].tutorial[idx];
+  if(!st||t.entered[idx])return;
+  t.entered[idx]=1;t.pf[idx]=S.pings.length;t.wf[idx]=S.webs.length;t.cf[idx]=S.calcs.length;
+  t.hf[idx]={router:S.hist.router.length,server:S.hist.server.length,pc1:S.hist.pc1.length,pc2:S.hist.pc2.length};
+  if(st.enter)st.enter(S);
+  t.snap[idx]=JSON.stringify(S.dev);
+}
+// 前のミッションが終わった時点の標準状態（ジャンプ・見直し用）
+function applyBase(S,k){
+  S.dev=freshState().dev;const d=S.dev;
+  if(k>=1){d.server.ip='192.168.1.10';d.pc1.ip='192.168.1.11';d.router.if1.ip='192.168.1.1';}
+  if(k>=3){d.router.if2.ip='192.168.2.1';d.router.fwd=true;d.pc2.ip='192.168.2.21';d.pc2.gw='192.168.2.1';d.server.gw='192.168.1.1';d.pc1.gw='192.168.1.1';}
+  if(k>=4){Object.assign(d.server.dhcp,{on:true,start:'192.168.1.100',end:'192.168.1.150',gw:'192.168.1.1',dns:'192.168.1.10'});d.pc1.mode='dhcp';renew(S,'pc1');}
+  if(k>=5){d.server.dnsSvc={on:true,records:[{name:'www.toyosho.example',ip:'192.168.1.10'}]};d.pc2.dns='192.168.1.10';}
+  if(k>=6){d.server.web={http:true,httpPort:'80',https:true,httpsPort:'443'};}
+}
+function beginMission(S,i){
+  S.mission=i;
+  const t=tstate(S,i);
+  if(t.started)return false;
+  t.started=true;
+  if(i>0&&!S.cleared[i-1])applyBase(S,i);
+  S.pings=[];S.webs=[];S.calcs=[];Object.keys(S.hist).forEach(k=>S.hist[k]=[]);
+  const m=MISSIONS[i];if(m.setup)m.setup(S);
+  enterStep(S,i,0);
+  return true;
+}
+function tutAdvance(S,k,force){
+  const T=MISSIONS[k].tutorial,t=tstate(S,k);
+  if(t.step>=T.length||(!force&&!stepDone(S,k,t.step)))return null;
+  t.step++;
+  if(t.step>=T.length){S.cleared[k]=true;return 'cleared';}
+  enterStep(S,k,t.step);
+  return 'next';
+}
+
+const IPVIZ=`<div class="ipviz"><div class="row"><span class="o net">192</span><span class="o net">168</span><span class="o net">1</span><span class="o host">10</span><span class="lb">IPアドレス</span></div><div class="row"><span class="o net">255</span><span class="o net">255</span><span class="o net">255</span><span class="o host">0</span><span class="lb">サブネットマスク</span></div><div class="cap"><span class="o net">青</span>＝ネットワーク部（町名）　<span class="o host">橙</span>＝ホスト部（番地）</div></div>`;
+const URLVIZ=`<div class="ipviz"><div class="row"><span class="o net">https://</span><span class="o host">www</span><span class="o net">.toyosho.example</span><span class="lb">URL の例</span></div><div class="cap"><span class="o host">橙</span>＝サーバ名（ホスト名）　<span class="o net">青</span>＝ドメイン名</div></div>`;
+
+// ======== ミッション1 ========
+const T1=[
+{title:'はじめに：4台の機器とLAN',focus:null,
+ why:`<div class="tbox"><b>🎯 この教材でできるようになること</b>小さな社内LANの設定を自分でできる／つながらないときに、原因を近いところから切り分けられる／台数に合わせてネットワークを設計できる。（実機演習でそのまま使えます）</div><p>ネットワークは、コンピュータどうしがデータをやり取りするしくみです。その中で、<b>限られた範囲（教室・会社の1フロアなど）のネットワーク</b>を <b>LAN</b> といいます。</p><p>画面の構成図にある機器の役割は次のとおりです。</p><ul><li><b>ルータ</b>：別々のネットワーク同士をつなぐ装置（ミッション3で使います）</li><li><b>サーバ</b>：Webやファイルなど、サービスを提供するコンピュータ</li><li><b>PC</b>：利用者が使う端末（PC①・PC②）</li></ul><p>通信するには、機器どうしがお互いを見分けられなければなりません。そのための「住所」が<b>IPアドレス</b>です。</p><p><b>接続の前提</b>：構成図の線は、機器どうしを<b>LANケーブルで（スイッチやハブを介して）つないでいる</b>ことを表します。無線LANでも考え方は同じです。この演習では、<b>ケーブル・電源・スイッチは正常</b>という前提で、「IPの設定」で通信できるかどうかに集中します。（実際の現場では、ケーブルの抜けやリンクの状態も確認します）</p><p><b>家庭・小さな事務所で、インターネットまでつなぐときの機器の役割</b>：</p><table class="sheet"><tr><th>機器</th><th>役割</th></tr><tr><td>ハブ（スイッチ）</td><td>LAN内のPCやサーバを<b>束ねる</b>集線装置。同じLANの機器どうしをつなぐ</td></tr><tr><td>ルータ</td><td><b>別のネットワーク同士</b>（社内LANとインターネットなど）をつなぎ、荷物の行き先を決める</td></tr><tr><td>ONU</td><td>光回線の<b>終端装置</b>。光ファイバの信号と、LANケーブルの電気信号を変換する</td></tr></table><p>並べると、<b>PC ─ ハブ ─ ルータ ─ ONU ─（光回線）─ インターネット</b> の順です。検定でも「AからCに、正しい順番で機器をつなぎなさい」という形で出題されます。</p>`,
+ quiz:{title:'🔌 PCからインターネットへ、正しい順番で機器をつなごう（PC ─ A ─ B ─ C ─ インターネット）',items:[
+  {id:'a',q:'<b>A</b>（PCにいちばん近い機器）は？',type:'choice',opts:['ハブ（スイッチ）','ルータ','ONU（光回線終端装置）'],answer:0,hint:'LAN内のPCやサーバを「束ねる」のは？',exp:'ハブ（スイッチ）。PCやサーバなど、LAN内の機器を束ねます。'},
+  {id:'b',q:'<b>B</b>（Aの次）は？',type:'choice',opts:['ハブ（スイッチ）','ルータ','ONU（光回線終端装置）'],answer:1,hint:'社内LANと「外のネットワーク」の境目に置く機器は？',exp:'ルータ。LANと、その外（インターネット）という別のネットワークをつなぎます。'},
+  {id:'c',q:'<b>C</b>（インターネット＝光回線にいちばん近い機器）は？',type:'choice',opts:['ハブ（スイッチ）','ルータ','ONU（光回線終端装置）'],answer:2,hint:'光ファイバが最初に差さる機器です。',exp:'ONU。光回線の終端で、光信号をLANケーブルで扱える信号に変換します。'}
+ ]},
+ todo:`<p>ミッション1では、LAN1にルータ・サーバ・PC①をつなぎ、<b>「本当につながったか」を自分で確かめる方法</b>を身につけます。使う道具は2つのコマンド（<code>ipconfig</code> と <code>ping</code>）です。読み終えたら「次のステップへ」。</p>`,
+ subs:[]},
+
+{title:'IPアドレスは機器の「住所」',focus:{dev:'server',view:'cfg'},
+ why:`<p>IPアドレスは、ネットワークにつながる機器につける<b>番号（住所）</b>です。IPv4 では <b>0〜255 の数字を4つ</b>（8ビット×4＝32ビット）、ピリオドで区切って書きます。同じネットワークの中で<b>同じ番号を2台につけてはいけません</b>。</p><p>ただし、住所だけでは「どこまでが同じ町か」が分かりません。それを決めるのが<b>サブネットマスク</b>です。</p>`+IPVIZ+`<p>255 の部分が「ネットワーク部（町名）」、0 の部分が「ホスト部（番地）」です。つまり<b>192.168.1 までが同じ機器は、同じネットワークの仲間</b>になります。</p>`,
+ todo:`<p>サーバのタブ →「設定画面」で、IPアドレス <code>192.168.1.10</code>、サブネットマスク <code>255.255.255.0</code> を入力して「適用」。デフォルトゲートウェイは空のままにします（LANの外へ出る必要がまだないためです）。</p>`,
+ subs:[{t:'サーバを 192.168.1.10 / 255.255.255.0 に設定した',f:S=>cfg(S,'server','192.168.1.10',M24)}],
+ after:`<p>これでサーバは「192.168.1 町の10番地」になりました。</p>`,
+ hint:`入力したあと「適用」ボタンを押さないと反映されません。`},
+
+{title:'ipconfig：自分の設定を確かめる',focus:{dev:'server',view:'term'},
+ why:`<p>設定したつもりでも、本当に反映されているかは、入力した画面を見ただけでは確信できません。そこで使うのが <code>ipconfig</code> です。<b>IP configuration（IP設定）</b>の略で、<b>その機器が今使っているネットワーク設定を表示</b>します。実機のWindowsでも同じコマンドです。</p>`,
+ todo:`<p>サーバの「ターミナル」で <code>ipconfig</code> と入力して Enter。</p>`,
+ subs:[{t:'サーバで ipconfig を実行した',f:(S,c)=>ranc(S,c,'server',/^ipconfig(\s+\/all)?\s*$/i)}],
+ after:`<p>出力の読み方：</p><ul><li><b>IPv4 アドレス</b>：自分の住所</li><li><b>サブネット マスク</b>：同じ町の範囲</li><li><b>デフォルト ゲートウェイ</b>：町の外へ出る「出口」。いまは空なので、同じLANの外とは通信できません（ミッション3で設定します）</li></ul><p>※ <code>ipconfig /all</code> と打つと、物理アドレス（MAC）など、より詳しい情報も見られます。</p>`,
+ hint:`ターミナルの下の入力欄に文字を打って Enter を押します。`},
+
+{title:'PC①もLANに入れる',focus:{dev:'pc1',view:'cfg'},
+ why:`<p>PC①もサーバと同じLANに入れます。同じネットワークの仲間なので、<b>ネットワーク部（192.168.1）は同じ</b>にして、<b>ホスト部（最後の数字）だけ別の番号</b>にします。</p><p>「なぜサーバと同じ 10 ではだめなのか」は、このミッションの最後に実際に試します。</p>`,
+ todo:`<p>PC①のタブ →「設定画面」で「次の IP アドレスを使う」を選び、IPアドレス <code>192.168.1.11</code>、サブネットマスク <code>255.255.255.0</code> を入力して「OK（適用）」。</p>`,
+ subs:[{t:'PC①を 192.168.1.11 / 255.255.255.0 に設定した',f:S=>cfg(S,'pc1','192.168.1.11',M24)}],
+ after:`<p>「IP アドレスを自動的に取得する」は、DHCP という仕組みを使うときの選択肢です（ミッション4で扱います）。</p>`,
+ hint:`「次の IP アドレスを使う」のラジオボタンを選ばないと、入力欄が灰色のままです。`},
+
+{title:'ping：まず自分自身に呼びかける',focus:{dev:'pc1',view:'term'},
+ why:`<p><code>ping</code> は、相手に小さなデータ（ICMPエコー要求）を送り、<b>返事（エコー応答）が返ってくるかを確かめる</b>コマンドです。名前は、潜水艦が音を出して反響で相手を探す「ピン」というソナー音に由来します。</p><p>最初に打つのが <code>ping 127.0.0.1</code>。<b>127.0.0.1 は「自分自身」</b>を指す特別なアドレス（ループバック）です。外のネットワークとは関係なく、<b>自分のPCの通信機能が正常か</b>を確かめられます。</p>`,
+ predict:{q:'PC①で <code>ping 127.0.0.1</code> を打つと、どうなる？',
+  opts:['返事が返ってくる（自分自身には届く）','返事が来ない（ルータがまだないから）','返事が来ない（相手のIPを設定していないから）'],correct:0,
+  why:'127.0.0.1 は自分自身専用のアドレスなので、ルータやほかの機器が無くても返事が返ってきます。'},
+ todo:`<p>PC①の「ターミナル」で <code>ping 127.0.0.1</code> を実行（先に予想を選びましょう）。</p>`,
+ subs:[{t:'PC①で ping 127.0.0.1 を実行し、返事が来た',f:(S,c)=>pinged(S,c,'pc1','127.0.0.1',p=>p.ok)}],
+ after:`<p>応答の読み方：</p><ul><li><b>バイト数 =32</b>：送ったデータの大きさ</li><li><b>時間 &lt;1ms</b>：往復にかかった時間</li><li><b>TTL</b>：データが通れるルータの数の上限。ルータを通るたびに1ずつ減ります（ミッション3で変化を観察します）</li><li>最後の統計：送信4・受信4・損失0% なら、全部返ってきた</li></ul><p class="note">※ ping が成功すれば「その相手までIPで届いている」有力な証拠です。ただし<b>失敗しただけでは通信不能と断定できません</b>（ファイアウォールなどが ping（ICMP）だけを遮断している場合があります）。TTLの初期値もOSごとに違います（Windowsは128が多い、など）。</p>`,
+ hint:`入力は <code>ping 127.0.0.1</code>（ping のあとに半角スペース）です。`},
+
+{title:'ping：同じLANのサーバに呼びかける',focus:{dev:'pc1',view:'term'},
+ why:`<p>次は別の機器へ。サーバのIPアドレスは 192.168.1.10。PC①（192.168.1.11）とネットワーク部が同じなので、<b>同じLANにいる</b>ことになります。</p>`,
+ predict:{q:'PC①から <code>ping 192.168.1.10</code> を打つと、どうなる？',
+  opts:['届く（同じLANにいて、どちらもIPを設定済みだから）','届かない（間にルータがないから）','届かない（サーバのipconfigをまだ確認していないから）'],correct:0,
+  why:'同じLAN（ネットワーク部が同じ）の機器どうしは、ルータを通さず直接やり取りできます。ルータが必要になるのは、別のネットワークへ出るときです。'},
+ todo:`<p>PC①のターミナルで <code>ping 192.168.1.10</code> を実行。</p>`,
+ subs:[{t:'PC①から 192.168.1.10 への ping で返事が来た',f:(S,c)=>pinged(S,c,'pc1','192.168.1.10',p=>p.ok)}],
+ after:`<p>ping は<b>行きと帰りの両方</b>が通って初めて「応答」になります。PC①の呼びかけ（行き）にサーバが返事（帰り）をした、ということです。</p>`,
+ hint:`届かない場合は、サーバとPC①のIPアドレスと「適用」を確認しましょう。`},
+
+{title:'ping：届かないとき、何が分かる？',focus:{dev:'pc1',view:'term'},
+ why:`<p>ルータにも呼びかけてみましょう。ルータのIPアドレスは 192.168.1.1 にする予定ですが、<b>まだルータには何も設定していません</b>。</p>`,
+ predict:{q:'PC①から <code>ping 192.168.1.1</code> を打つと、どうなる？',
+  opts:['届く','届かない（その番地にはまだ誰も住んでいない＝IPを設定した機器がない）','何も起きず、画面に何も表示されない'],correct:1,
+  why:'192.168.1.1 は同じ町（LAN）の番地ですが、ルータにIPを設定していないので、その番地の機器が存在しません。'},
+ todo:`<p>PC①のターミナルで <code>ping 192.168.1.1</code> を実行して、<b>届かない場合の表示</b>を確かめましょう。</p>`,
+ subs:[{t:'PC①から 192.168.1.1 に ping を打ち、届かない表示を確認した',f:(S,c)=>pinged(S,c,'pc1','192.168.1.1',p=>!p.ok)}],
+ after:`<p><b>「宛先ホストに到達できません」</b>は、「同じLANのはずなのに、その番地に機器が見つからない」という意味です。</p><p>⚠ 気をつけたいのは、この場合でも統計が<b>「受信 = 4」</b>になることです。「到達できません」というエラー通知も“返事”として数えられるためです。<b>受信数だけで成功と判断せず、応答の中身まで読む</b>のが大事です。</p><p>届かないときは、相手側の設定（IPが入っているか）を疑って切り分けます。</p>`,
+ hint:`もしルータを先に設定してしまった場合は、ルータのポート1のIPアドレスを空にして適用すると、未設定の状態に戻せます。`},
+
+{title:'相手側を直して、もう一度ping',focus:{dev:'router',view:'cfg'},
+ why:`<p>では相手側を直してみましょう。ルータの「ポート1」は、LAN1側の出入口です。ここにIPアドレスを設定すると、ルータがLAN1の住人になります。</p>`,
+ todo:`<p>ルータのタブ →「設定画面」のポート1に、IPアドレス <code>192.168.1.1</code>、サブネットマスク <code>255.255.255.0</code> を入力して「適用」。そのあと、PC①のターミナルでもう一度 <code>ping 192.168.1.1</code> を実行。</p>`,
+ subs:[{t:'ルータ ポート1 を 192.168.1.1 / 255.255.255.0 に設定した',f:S=>same(S.dev.router.if1.ip,'192.168.1.1')&&same(S.dev.router.if1.mask,M24)},
+       {t:'PC①から 192.168.1.1 への ping で返事が来た',f:(S,c)=>pinged(S,c,'pc1','192.168.1.1',p=>p.ok)}],
+ after:`<p>さっきとの違いは「相手のIPアドレスを設定した」ことだけです。<b>同じ ping でも、相手側の設定しだいで結果が変わります</b>。つまり ping の結果は、単なる「届く／届かない」ではなく、<b>どこを直せばいいかのヒント</b>になります。</p>`,
+ hint:`ポート2は今回使いません（ミッション3で設定します）。`},
+
+{title:'やってはいけない設定：IPアドレスの重複',focus:{dev:'pc1',view:'cfg'},
+ why:`<p>最後に「なぜ同じ番号をつけてはいけないのか」を体験します。住所が同じ家が2軒あったら、郵便はどちらに届くでしょう？</p>`,
+ predict:{q:'同じIPアドレス（192.168.1.10）の機器が2台あるとき、そのIPへの ping は？',
+  opts:['必ず成功する','必ず失敗する','成功したり失敗したり、不安定になる'],correct:2,
+  why:'同じ住所の機器が2台あると、どちらが返事をするか決まらず、届いたり届かなかったりします。実機でも「IPアドレスの競合」という警告が出ることがあります。（実機では、安定して片方に届く／断続的に切れる／複数の応答が返る、など結果が一定ではなく、予測できません。この演習では、不安定さを「成功と失敗が交互」で再現しています）'},
+ todo:`<p>① PC①の設定画面でIPアドレスを <code>192.168.1.10</code>（サーバと同じ）に変えて適用。構成図に ⚠ が出ます。<br>② ルータの「ターミナル」で <code>ping 192.168.1.10</code> を実行（ルータの画面は <code>!</code>＝成功、<code>.</code>＝失敗）。<br>③ 観察したら、PC①を <code>192.168.1.11</code> に戻して適用。</p>`,
+ subs:[{t:'ルータから 192.168.1.10 へ ping を打ち、結果が不安定になるのを確認した',f:(S,c)=>pinged(S,c,'router','192.168.1.10',p=>p.conflict)},
+       {t:'PC①を 192.168.1.11 に戻した（競合を解消）',f:S=>cfg(S,'pc1','192.168.1.11',M24)&&conflicts(S).length===0}],
+ after:`<p>ルータの画面で <code>!</code> と <code>.</code> が混ざって出たはずです。だから<b>同じネットワークでIPアドレスは重複させてはいけません</b>。</p>`,
+ hint:`ルータのタブ →「ターミナル」で <code>ping 192.168.1.10</code> と打ちます。PC①からだと自分宛てになってしまうため、ルータから打ちます。`},
+
+{title:'まとめ：3つの確認と、切り分けの順番',focus:null,
+ why:`<table class="sheet"><tr><th>コマンド</th><th>意味</th><th>使いどころ</th></tr><tr><td class="m">ipconfig</td><td>自分のネットワーク設定を表示</td><td>設定が反映されているか確認</td></tr><tr><td class="m">ping 127.0.0.1</td><td>自分自身に呼びかける</td><td>自分の通信機能が正常か</td></tr><tr><td class="m">ping 相手のIP</td><td>相手に呼びかけて返事を確認</td><td>相手まで届くか／どこで止まるか</td></tr></table><p>届かないときは<b>「近いところから順に」</b>調べます。自分 → 同じLANの相手 → …と進めば、どこで止まったかで原因の見当がつきます。次のミッションで、この切り分けを実際の障害で使います。</p>`,
+ todo:`<p>「ミッション1を完了する」を押すと、実機で試すカードが表示されます。</p>`,
+ subs:[]}
+];
+
+// ======== ミッション2：切り分け ========
+const T2=[
+{title:'症状を確かめる',focus:{dev:'pc1',view:'term'},
+ why:`<p>ここからは実際の障害対応です。月曜の朝、経理から「<b>PC①が社内サーバにつながらない</b>」と連絡がありました。先週までは動いていたそうです。</p><p>原因が分からないときに、やみくもに設定を触るのは危険です。まず<b>症状を確かめ、疑う範囲を一つずつ狭めていく</b>のが基本で、この作業を<b>「切り分け」</b>といいます。</p>`,
+ todo:`<p>まず症状を自分の目で確かめます。PC①のターミナルで <code>ping 192.168.1.10</code>（サーバ）を実行して、どう表示されるか見てみましょう。</p>`,
+ subs:[{t:'PC①から サーバ に ping を打ち、届かないことを確認した',f:(S,c)=>pinged(S,c,'pc1','192.168.1.10',p=>!p.ok)}],
+ after:`<p><b>「PING: 転送に失敗しました。General failure。」</b>は、「データを送り出せなかった」という意味です。相手がいない（宛先ホストに到達できません）のでも、返事が来ない（タイムアウト）のでもなく、<b>自分の側で送り先を決められない</b>ときに出ます。</p><p>ここではまだ原因は分かりません。次で疑う範囲を狭めていきます。</p>`,
+ hint:`PC①のタブ →「ターミナル」で入力します。`},
+
+{title:'切り分け①：自分自身は大丈夫？',focus:{dev:'pc1',view:'term'},
+ why:`<p>切り分けは<b>「近いところから順に」</b>。いちばん近いのは自分自身です。<code>ping 127.0.0.1</code> が通れば、<b>PC内部のTCP/IP処理が応答している</b>と分かります。NIC・ケーブル・Wi-Fiなど、外との接続状態は、この試験だけでは分かりません。</p>`,
+ predict:{q:'PC①のIP設定に問題がありそうです。それでも <code>ping 127.0.0.1</code> は通る？',
+  opts:['通る（127.0.0.1 はIP設定と関係なく自分自身を指すから）','通らない（IP設定が間違っているから）'],correct:0,
+  why:'ループバック（127.0.0.1）は、IPアドレスの設定内容に関係なく自分自身に届きます。だから確かめられるのは「PC内部のTCP/IP処理が応答するか」だけです（NICやケーブルなど外との接続は分かりません）。'},
+ todo:`<p>PC①のターミナルで <code>ping 127.0.0.1</code> を実行。</p>`,
+ subs:[{t:'PC①で ping 127.0.0.1 を実行し、返事が来た',f:(S,c)=>pinged(S,c,'pc1','127.0.0.1',p=>p.ok)}],
+ after:`<p>返事が来たので、<b>PCの通信機能そのものは正常</b>です。疑う範囲は「ネットワーク設定」か「ネットワークの先」に絞られました。</p>`,
+ hint:`<code>ping 127.0.0.1</code> と入力します。`},
+
+{title:'切り分け②：自分の設定を読む',focus:{dev:'pc1',view:'term'},
+ why:`<p>次は<b>自分の設定</b>の確認です。<code>ipconfig</code> で今のIPアドレスを表示し、相手（サーバ：192.168.1.10）と<b>同じ町（ネットワーク）にいるか</b>を読み取ります。サブネットマスクは 255.255.255.0 なので、<b>3つ目の数字までが同じ</b>なら同じ町です。</p>`,
+ predict:{label:'🔍 ipconfig の結果から判断しよう',q:'PC①の <code>ipconfig</code> を見て、サーバ（192.168.1.10）と同じ町にいるか答えてください。',
+  opts:['同じ町（ネットワーク部が同じ）','違う町（ネットワーク部が違う）','同じ町だが、番地（ホスト部）が重複している'],correct:1,
+  why:'PC①のIPアドレスは 192.168.<b>10</b>.11 で、サーバの 192.168.<b>1</b>.10 とは3つ目の数字が違います。違う町の相手には「出口（デフォルトゲートウェイ）」を通して送りますが、PC①には出口も設定されていないため、送り先を決められず General failure になっていました。'},
+ todo:`<p>PC①のターミナルで <code>ipconfig</code> を実行し、IPv4アドレスを読んでから答えを選びましょう。</p>`,
+ subs:[{t:'PC①で ipconfig を実行した',f:(S,c)=>ranc(S,c,'pc1',/^ipconfig(\s+\/all)?\s*$/i)}],
+ hint:`IPv4 アドレスの「3つ目の数字」に注目しましょう。`},
+
+{title:'原因を直して確認',focus:{dev:'pc1',view:'cfg'},
+ why:`<p>原因は、PC①のIPアドレスの<b>入力ミス</b>でした。直したら、必ず<b>もう一度同じ ping で確認</b>します。直したつもりで終わらせないことが大切です。</p>`,
+ todo:`<p>PC①の設定画面でIPアドレスを <code>192.168.1.11</code> に直して適用し、ターミナルで <code>ping 192.168.1.10</code> を実行。</p>`,
+ subs:[{t:'PC①を 192.168.1.11 / 255.255.255.0 に直した',f:S=>cfg(S,'pc1','192.168.1.11',M24)},
+       {t:'PC①から サーバ への ping で返事が来た',f:(S,c)=>pinged(S,c,'pc1','192.168.1.10',p=>p.ok)}],
+ after:`<p>症状 → 自分自身 → 自分の設定 → 相手、と順に絞って原因にたどり着けました。<b>勘で設定を触らず、確認の結果で原因を絞る</b>のが切り分けです。</p>`,
+ hint:`「192.168.10.11」の「10」が間違いです。`},
+
+{title:'自力チャレンジ：同じ症状、別の原因',focus:{dev:'pc1',view:'term'},challenge:true,blind:true,
+ enter:S=>{S.dev.server.ip='192.168.1.100';},
+ todo:`<p>🔥 別の連絡が来ました。「<b>PC①からサーバにつながらない</b>」。さっきと同じ症状ですが、原因は違うかもしれません。ここからは<b>手順の指示なし</b>です。切り分けの順番を思い出して、自分で原因を見つけて直してください。使えるのは <code>ping</code> と <code>ipconfig</code> です（設定画面は各機器のタブにあります）。</p><p>📒 <b>IPアドレス管理表（台帳）</b>：サーバ ＝ <code>192.168.1.10</code> ／ PC① ＝ <code>192.168.1.11</code>　※ 台帳は「あるべき設定」です。構成図には、いま実際に設定されている値は表示しません。<b>実際の値は ipconfig や設定画面で確認</b>します。</p>`,
+ subs:[{t:'PC①から サーバ（192.168.1.10）への ping で返事が来る',f:(S,c)=>pinged(S,c,'pc1','192.168.1.10',p=>p.ok)}],
+ hints:[`まず PC①から <code>ping 192.168.1.10</code> を打って、表示を読もう。さっきの「General failure」とは違うメッセージのはずです。`,
+  `「宛先ホストに到達できません」は「同じ町のはずなのに、その番地に機器がいない」という意味でした。疑うのは、呼びかけた<b>相手側</b>の設定です。`,
+  `サーバのターミナルで <code>ipconfig</code> を実行してみよう。IPv4アドレスは、台帳どおり 192.168.1.10 になっていますか？`,
+  `ping の宛先は台帳の 192.168.1.10 です。実際のサーバの設定が違っていたら、台帳どおりに直すのがあなたの仕事です。`],
+ after:`<p>原因は、<b>サーバのIPアドレス</b>が 192.168.1.<b>100</b> になっていたことでした。PC①は 192.168.1.10 に呼びかけているのに、その番地には誰もいなかったのです。</p><p>さっきの「General failure」は<b>自分側</b>を疑うサイン、今回の「宛先ホストに到達できません」は<b>相手側</b>を疑うサインでした。</p>`},
+
+{title:'まとめ：エラー表示の読み方',focus:null,
+ why:`<table class="sheet"><tr><th>表示</th><th>意味</th><th>まず疑う場所</th></tr><tr><td class="m">General failure</td><td>送り出せない</td><td>自分の設定（IP・マスク・ゲートウェイ）</td></tr><tr><td class="m">宛先ホストに到達できません</td><td>同じ町なのに、その番地に機器がいない</td><td>相手側のIP設定／電源・接続</td></tr><tr><td class="m">要求がタイムアウトしました</td><td>呼びかけたが、返事が来ない</td><td>途中の経路や返事の帰り道（ミッション3で詳しく）</td></tr></table><p>確認の順番は <b>① ping 127.0.0.1（自分）→ ② ipconfig（自分の設定）→ ③ ping 相手</b>。</p>`,
+ todo:`<p>「ミッション2を完了する」を押してください。</p>`,
+ subs:[]}
+];
+
+// ======== ミッション3：ルータとゲートウェイ ========
+const T3=[
+{title:'なぜ別のネットワークに分けるのか',focus:null,
+ why:`<p>営業部のLAN（<b>LAN2</b>）が新設されました。経理部のLAN1とは<b>別のネットワーク</b>です。「同じ会社なのに、なぜわざわざ分けるの？」と思うかもしれません。実務では、部署ごと・用途ごとにネットワークを分けるのが普通です。</p><ul><li><b>セキュリティ</b>：経理のデータがあるサーバに、他部署のPCから自由に届かないようにできる。通してよい通信だけを、間のルータで通せる</li><li><b>負荷</b>：「LAN内の全員」に呼びかける通信（ブロードキャスト）が、会社全体に広がらず、ネットワークが軽くなる</li><li><b>管理</b>：障害が起きたとき、影響が出る範囲が分かりやすい</li></ul><p><b>同じネットワークかどうかは、IPアドレスとサブネットマスクを組み合わせて判定します。</b>LAN1は 192.168.<b>1</b>.x、LAN2は 192.168.<b>2</b>.x で、どちらもマスクは 255.255.255.0（/24）です。この場合は先頭3つの数字がネットワーク部なので、3つ目が違う2つは<b>別のネットワーク</b>になります。（マスクが変わると境目も変わります。詳しくはミッション7で扱います）</p><p><b>別のネットワーク同士は、そのままでは通信できません。</b>間に<b>ルータ</b>が必要です。ルータは<b>両方のネットワークに住所を持つ</b>機器で、荷物（パケット）を受け取って、もう一方の町へ運びます。</p><div class="ipviz"><div class="row" style="font-family:Consolas,monospace;font-size:13px;white-space:pre-wrap">【LAN1：経理部】 サーバ .10 ／ PC① .11\n        │ 192.168.1.1（ルータのポート1）\n      [ルータ]\n        │ 192.168.2.1（ルータのポート2）\n【LAN2：営業部】 PC② .21</div></div>`,
+ todo:`<p>ミッション3のゴールは、<b>LAN1のサーバとLAN2のPC②を、ルータ経由でつなぐ</b>ことです。読み終えたら「次のステップへ」。</p>`,
+ subs:[]},
+
+{title:'ゲートウェイは「出口」：送り先の決め方',focus:null,
+ why:`<p>機器は、荷物を送る前に、毎回この判断をしています。</p><ol><li>宛先は<b>自分と同じネットワーク</b>か？（自分のIPアドレスとサブネットマスクで判定）</li><li><b>同じ</b>なら → 宛先の機器に<b>直接</b>送る（ミッション1・2でやったこと）</li><li><b>違う</b>なら → <b>デフォルトゲートウェイ（出口）</b>に荷物を渡す。そこから先はルータにおまかせ</li></ol><p>つまり、ゲートウェイの設定が必要なのは<b>「別のネットワークと通信するとき」だけ</b>です。同じネットワーク内だけなら、ゲートウェイが空でも通信できます（ミッション1のサーバがそうでした）。</p><p>もう1つ大事なのは、<b>通信は「行き」と「帰り」の2方向</b>だということです。ping は、要求が相手に届き、相手が<b>返事を返せて</b>初めて成功します。相手に出口が無いと、<b>要求は相手に届いているのに、返事が帰れない</b>ことがあります。このとき、送った側には「返事が来ない」としか見えません。</p><table class="sheet"><tr><th>送る側の出口</th><th>返す側の出口</th><th>結果</th></tr><tr><td>なし</td><td>—</td><td>そもそも送り出せない（General failure）</td></tr><tr><td>あり</td><td>なし</td><td><b>要求は届くが、返事が帰れない</b>（タイムアウトに見える）</td></tr><tr><td>あり</td><td>あり</td><td>成功</td></tr></table>`,
+ predict:{q:'PC②（192.168.2.21 ／ 255.255.255.0）が、サーバ（192.168.1.10）に荷物を送るとき、最初に渡す相手は？',
+  opts:['サーバに直接','デフォルトゲートウェイ（ルータ）','PC①'],correct:1,
+  why:'サーバは「違うネットワーク（192.168.1.x）」にいます。違うネットワーク宛ては、直接送らず、まず出口（デフォルトゲートウェイ）に渡します。'},
+ todo:`<p>予想を選んで、次へ進みましょう。</p>`,
+ subs:[]},
+
+{title:'ルータのポート2とPC②を設定する',focus:{dev:'router',view:'cfg'},
+ why:`<p>ルータの「ポート2」はLAN2側の出入口です。PC②の<b>デフォルトゲートウェイ</b>には、<b>自分と同じ町にいるルータのアドレス</b>（ポート2のIP）を入れます。違う町のアドレスを入れても、出口にたどり着けません。</p>`,
+ todo:`<p>① ルータ：ポート2に IP <code>192.168.2.1</code>、マスク <code>255.255.255.0</code>（まだ「IPルーティング」は有効にしません）<br>② PC②：IP <code>192.168.2.21</code>、マスク <code>255.255.255.0</code>、デフォルトゲートウェイ <code>192.168.2.1</code></p>`,
+ subs:[{t:'ルータ ポート2 を 192.168.2.1 / 255.255.255.0 に設定した',f:S=>same(S.dev.router.if2.ip,'192.168.2.1')&&same(S.dev.router.if2.mask,M24)},
+       {t:'PC②を 192.168.2.21 / 255.255.255.0 / GW 192.168.2.1 に設定した',f:S=>cfg(S,'pc2','192.168.2.21',M24,'192.168.2.1')}],
+ hint:`PC②の「デフォルト ゲートウェイ」欄を忘れずに。入力後は「OK（適用）」です。`},
+
+{title:'まずゲートウェイに ping',focus:{dev:'pc2',view:'term'},
+ why:`<p>町の外へ出るには、まず<b>出口（ゲートウェイ）まで届く</b>ことが前提です。実機でも「つながらない」ときは、<b>最初にゲートウェイへ ping</b> するのが定番の確認です。</p>`,
+ predict:{q:'PC②から <code>ping 192.168.2.1</code>（ゲートウェイ）を打つと？（ルータの「IPルーティング」はまだOFF）',
+  opts:['届く（同じ町にいるルータ自身への呼びかけだから）','届かない（ルーティングを有効にしていないから）','General failure'],correct:0,
+  why:'ルータ自身への呼びかけには、「転送」機能とは関係なく返事をします。IPルーティングは、<b>他の機器宛ての荷物を運ぶ</b>機能です。'},
+ todo:`<p>PC②のターミナルで <code>ping 192.168.2.1</code> を実行。</p>`,
+ subs:[{t:'PC②から ゲートウェイ（192.168.2.1）への ping で返事が来た',f:(S,c)=>pinged(S,c,'pc2','192.168.2.1',p=>p.ok)}],
+ after:`<p>出口（ゲートウェイ）までは届くと確認できました。<b>「出口まで届く」と「出口の先へ届く」は別の話</b>です。</p>`,
+ hint:`PC②のタブ →「ターミナル」で入力します。`},
+
+{title:'LAN1のサーバに ping（転送OFF）',focus:{dev:'pc2',view:'term'},
+ why:`<p>では出口の先、LAN1のサーバ（192.168.1.10）に呼びかけてみましょう。ルータの「IPルーティング」は、まだOFFのままです。</p>`,
+ predict:{q:'PC②から <code>ping 192.168.1.10</code> を打つと？',
+  opts:['届く','要求がタイムアウトする（ルータが荷物を運んでくれない）','宛先ホストに到達できませんと出る'],correct:1,
+  why:'ルータのIPルーティングがOFFだと、PC②の荷物をルータが受け取っても、LAN1へ転送されません。呼びかけは出たのに返事が来ないので「タイムアウト」になります。'},
+ todo:`<p>PC②のターミナルで <code>ping 192.168.1.10</code> を実行して、結果を確かめましょう。</p>`,
+ subs:[{t:'PC②から サーバ に ping を打ち、届かないことを確認した',f:(S,c)=>pinged(S,c,'pc2','192.168.1.10',p=>!p.ok&&!p.fwd)}],
+ after:`<p><b>「要求がタイムアウトしました」</b>は、「呼びかけたが返事が来ない」という表示です。<b>行きで止まったのか、帰りで止まったのかは、この表示だけでは分かりません</b>。次で確かめます。</p>`,
+ hint:`ルータのIPルーティングは、まだ有効にしないでください。`},
+
+{title:'転送をONにしても届かない？',focus:{dev:'router',view:'cfg'},
+ why:`<p>ルータの<b>IPルーティング（パケット転送）</b>を有効にすると、ルータは他の機器宛ての荷物を運んでくれます。これで届くでしょうか？ ただし、サーバの「デフォルトゲートウェイ」は、まだ設定していません。</p><p class="note">※ この「IPルーティング」のチェックは<b>演習用の簡易設定</b>です。専用ルータは、つないだネットワーク間の転送が最初から有効なのが普通です。L3スイッチは機種により <code>ip routing</code> の有効化が必要で、Windows/Linuxをルータにするときは OS側のIP転送の有効化が必要です。</p>`,
+ predict:{q:'ルータのIPルーティングをONにして、もう一度 PC②から <code>ping 192.168.1.10</code> を打つと？',
+  opts:['届く','届かない（行きは届くが、サーバから返事が帰れない）','General failure'],correct:1,
+  why:'pingは<b>行きと帰りの両方</b>が通って初めて成功です。サーバから見ると PC②（192.168.2.21）は違う町の相手。返事を出す出口（デフォルトゲートウェイ）が未設定なので、返事を送り出せません。'},
+ todo:`<p>ルータの設定画面で「IPルーティング」を有効にして適用 → PC②のターミナルで <code>ping 192.168.1.10</code> を実行。</p>`,
+ subs:[{t:'ルータの「IPルーティング」を有効にした',f:S=>S.dev.router.fwd===true},
+       {t:'PC②から サーバ に ping を打ち、結果を確認した',f:(S,c)=>pinged(S,c,'pc2','192.168.1.10',p=>!p.ok&&p.fwd)}],
+ after:`<p>同じ「タイムアウト」でも、前のステップは<b>転送OFF</b>、今回は<b>返事の帰り道がない</b>と、原因が違いました。<b>表示が同じでも原因は1つとは限らない</b>ので、設定を一つずつ確認します。</p><table class="sheet"><tr><th>区間</th><th>この時点の状態</th></tr><tr><td>① PC②→ルータ（出口へ）</td><td>✓ PC②にゲートウェイがある</td></tr><tr><td>② ルータ→サーバ（転送ON）</td><td>✓ <b>要求はサーバに届いている</b></td></tr><tr><td>③ サーバ→ルータ（返事）</td><td>✗ サーバに出口がなく、返事が帰れない</td></tr></table><p>サーバには要求が届いているのに、PC②には「返事が来ない」と見える。<b>相手に届いたかどうかと、自分に返事が来たかどうかは別</b>、という点が大事です。</p>`,
+ hint:`ルータのタブ →「設定画面」のチェックボックスをONにして「適用」。`},
+
+{title:'サーバに帰り道を作る',focus:{dev:'server',view:'cfg'},
+ why:`<p>サーバにも<b>デフォルトゲートウェイ</b>（LAN1側のルータのアドレス 192.168.1.1）を設定して、返事を送り出せるようにします。</p>`,
+ todo:`<p>サーバの設定画面でデフォルトゲートウェイに <code>192.168.1.1</code> を入れて適用 → PC②のターミナルで <code>ping 192.168.1.10</code> を実行。返事の <b>TTL</b> の値に注目。</p>`,
+ subs:[{t:'サーバのデフォルトゲートウェイを 192.168.1.1 にした',f:S=>same(S.dev.server.gw,'192.168.1.1')},
+       {t:'PC②から サーバ への ping で返事が来た',f:(S,c)=>pinged(S,c,'pc2','192.168.1.10',p=>p.ok)}],
+ after:`<p>届きました。返事の <b>TTL=127</b> に注目してください。サーバが返事を出したときのTTLは128で、<b>ルータを1台通るたびに1ずつ減る</b>ので127です（ループして荷物が永遠に回り続けるのを防ぐしくみ）。TTLを見ると、<b>ルータを何台越えたか</b>の見当がつきます。</p><p class="note">※ 実機では相手の初期TTLがOSや機器ごとに違う（64・128・255など）ため、初期値を知らないと正確には数えられません。この演習では、機器ごとに固定の値にしています。</p>`,
+ hint:`サーバのタブ →「設定画面」の「デフォルト ゲートウェイ」欄です。`},
+
+{title:'tracert：通った道を見る',focus:{dev:'pc2',view:'term'},
+ why:`<p><code>tracert</code>（trace route）は、<b>相手までに通った中継点（ルータ）を順に表示</b>するコマンドです。「どこまでは届いて、どこから先が止まるか」を調べるのに使います。</p>`,
+ predict:{q:'PC②から <code>tracert 192.168.1.10</code> を打つと、1行目（最初の中継点）に出るのは？',
+  opts:['ルータ（192.168.2.1）','サーバ（192.168.1.10）','PC①（192.168.1.11）'],correct:0,
+  why:'PC②が最初に荷物を渡す相手は、デフォルトゲートウェイ（ルータ）です。tracertの1行目は、その最初の中継点が表示されます。'},
+ todo:`<p>PC②のターミナルで <code>tracert 192.168.1.10</code> を実行。</p>`,
+ subs:[{t:'PC②で tracert 192.168.1.10 を実行した',f:(S,c)=>ranc(S,c,'pc2',/^tracert\s+192\.168\.1\.10\s*$/i)}],
+ after:`<p>1行目がルータ、2行目がサーバでした。<b>実機でも tracert 8.8.8.8 などで、最初の中継点が自分のゲートウェイと同じか</b>確かめられます。</p><p class="note">※ 実機の tracert で <code>*</code>（応答なし）が出ても、そのルータより先に通信できないとは限りません。中継機器が応答を返さない設定のことがあります。</p>`,
+ hint:`<code>tracert 192.168.1.10</code>（tracert のあとに半角スペース）です。`},
+
+{title:'自力チャレンジ：PC①からPC②へ',focus:{dev:'pc1',view:'term'},challenge:true,
+ todo:`<p>🔥 「経理のPC①から、営業のPC②（192.168.2.21）へ ping を通したい」と依頼が来ました。指示はありません。必要な設定を考えて、<b>自分で</b>通してください。</p>`,
+ subs:[{t:'PC①から PC②（192.168.2.21）への ping で返事が来る',f:(S,c)=>pinged(S,c,'pc1','192.168.2.21',p=>p.ok)}],
+ hints:[`まず PC①から ping して、表示を読もう。表示から「自分側」「相手側」のどちらを疑うべきか分かります。`,
+  `PC①は、違う町（LAN2）に荷物を送ろうとしています。そのとき必要な「出口」は設定されていますか？ <code>ipconfig</code> で確認しよう。`,
+  `PC①のデフォルトゲートウェイが空です。LAN1側のルータのアドレス <code>192.168.1.1</code> を設定しよう。`],
+ after:`<p>PC①のデフォルトゲートウェイが未設定で、「General failure」（自分側で送り先を決められない）になっていました。<b>別の町へ送るときは、送る側にも返す側にも出口（ゲートウェイ）が必要</b>です。</p>`},
+
+{title:'まとめ：つながらない症状と原因',focus:null,
+ why:`<table class="sheet"><tr><th>表示</th><th>意味</th><th>まず疑う場所</th></tr><tr><td class="m">General failure</td><td>送り出せない</td><td>自分のゲートウェイ・IP・マスク</td></tr><tr><td class="m">宛先ホストに到達できません</td><td>同じ町に相手がいない</td><td>相手のIP／ゲートウェイの指定ミス</td></tr><tr><td class="m">要求がタイムアウトしました</td><td>返事が来ない</td><td>ルータの転送設定／<b>返事の帰り道（相手側のゲートウェイ）</b></td></tr></table><p>別のネットワークと通信するには、<b>①ルータのIPルーティング ②送る側のゲートウェイ ③返す側のゲートウェイ</b>がそろっている必要があります。</p>`,
+ todo:`<p>「ミッション3を完了する」を押してください。</p>`,
+ subs:[]}
+];
+
+// ======== ミッション4：DHCP ========
+const T4=[
+{title:'なぜDHCPが必要？',focus:null,
+ why:`<p>PCが増えるたびに、IPアドレス・サブネットマスク・ゲートウェイ・DNSを手で入力するのは大変です。入力ミスや、IPアドレスの重複（ミッション1で見たとおり）の原因にもなります。</p><p>そこで使うのが <b>DHCP</b>（Dynamic Host Configuration Protocol）です。<b>ネットワークにつないだ機器に、IPアドレスなどを自動で割り当てる</b>しくみです。DHCPサーバがあらかじめ決めた範囲（<b>プール</b>）から、空いているアドレスを貸し出します。</p><p>このとき、IPアドレスだけでなく<b>ゲートウェイやDNSサーバの情報も一緒に配ります</b>。</p>`,
+ todo:`<p>読み終えたら「次のステップへ」。サーバでDHCPサービスを動かして、PC①に自動で設定を配ります。</p>`,
+ subs:[]},
+
+{title:'サーバでDHCPサービスを設定する',focus:{dev:'server',view:'cfg'},
+ why:`<p>プール（配るアドレスの範囲）は、<b>固定IPで使っている番地と重ならない範囲</b>にします。今は ルータ=.1、サーバ=.10 などを固定で使っているので、プールは .100〜.150 にします。重なると、IPアドレスの競合のもとです。</p>`,
+ todo:`<p>サーバの設定画面の「DHCPサービス」で、有効にして、配布開始 <code>192.168.1.100</code>、配布終了 <code>192.168.1.150</code>、配るサブネットマスク <code>255.255.255.0</code>、配るゲートウェイ <code>192.168.1.1</code>、配るDNS <code>192.168.1.10</code> を入力して「適用」。</p>`,
+ subs:[{t:'サーバのDHCPサービスを設定して有効にした',f:S=>dhcpCfg(S)}],
+ hint:`「DHCPサービスを有効にする」のチェックを忘れずに。`},
+
+{title:'PC①を自動取得にして、結果を読む',focus:{dev:'pc1',view:'cfg'},
+ why:`<p>PC①の設定を「<b>IPアドレスを自動的に取得する</b>」に変えると、PC①がネットワークに「誰かIPアドレスを貸して」と呼びかけ、DHCPサーバが返事をします。</p>`,
+ predict:{q:'PC①を自動取得にして <code>ipconfig /all</code> を見ると、「DHCP サーバー」には何が表示される？',
+  opts:['サーバ（192.168.1.10）','ルータ（192.168.1.1）','何も表示されない'],correct:0,
+  why:'今回、DHCPサービスを動かしているのはサーバです。「DHCP サーバー」の欄は、<b>アドレスを貸してくれた機器</b>を表します。'},
+ todo:`<p>PC①の設定画面で「IP アドレスを自動的に取得する」を選んで適用 → PC①のターミナルで <code>ipconfig /all</code> を実行。</p>`,
+ subs:[{t:'PC①を自動取得にして、プール内のIPアドレスを受け取った',f:S=>inPool(S)},
+       {t:'PC①で ipconfig /all を実行した',f:(S,c)=>ranc(S,c,'pc1',/^ipconfig\s+\/all\s*$/i)}],
+ after:`<p>IPv4アドレスはプールの最初の空き（.100）、ゲートウェイとDNSも自動で入りました。<b>「DHCP 有効：はい」</b>と<b>「DHCP サーバー」</b>は、実機の <code>ipconfig /all</code> でも必ず確認する項目です。</p>`,
+ hint:`設定画面で、いちばん上のラジオボタン（自動的に取得する）を選びます。`},
+
+{title:'DHCPサーバが応答しないと…',focus:{dev:'server',view:'cfg'},
+ why:`<p>もしDHCPサーバが止まっていたら、PCはどうなるでしょう。ここでは、サーバのDHCPを一時的に止めて試します。</p>`,
+ predict:{q:'DHCPサービスを無効にして、PC①で <code>ipconfig /release</code> → <code>ipconfig /renew</code> を実行すると？',
+  opts:['IPアドレスなしになり、何も表示されない','169.254.x.x という「自動構成」のアドレスになる','前のIPアドレスのまま'],correct:1,
+  why:'DHCPサーバから返事がないと、Windowsは<b>169.254.x.x</b>のアドレスを自分で作ります（自動構成）。同じLAN内でしか通じず、ゲートウェイもありません。'},
+ todo:`<p>① サーバのDHCPサービスを無効にして適用<br>② PC①のターミナルで <code>ipconfig /release</code>（アドレスを返す）→ <code>ipconfig /renew</code>（もう一度取得）→ <code>ipconfig</code></p>`,
+ subs:[{t:'サーバのDHCPサービスを無効にした',f:S=>!S.dev.server.dhcp.on},
+       {t:'PC①で ipconfig /release と ipconfig /renew を実行した',f:(S,c)=>ranc(S,c,'pc1',/^ipconfig\s+\/release\s*$/i)&&ranc(S,c,'pc1',/^ipconfig\s+\/renew\s*$/i)},
+       {t:'PC①で ipconfig を実行し、結果を確認した',f:(S,c)=>ranc(S,c,'pc1',/^ipconfig\s*$/i)}],
+ after:`<p>「自動構成 IPv4 アドレス」の <b>169.254.x.x</b> は、実機で「ネットにつながらない」ときの重要なサインです。見たら、<b>「DHCPからアドレスをもらえていない」</b>と判断し、DHCPサーバの状態や、ケーブル・無線の接続を確認します。</p><p class="note">※ すでに有効なリース（貸出）が残っている端末は、DHCPサーバが止まっても、すぐには 169.254.x.x になりません。<code>/release</code> のあとなど、新しく取得に失敗して使えるリースが無いときに現れます。</p>`,
+ hint:`ターミナルで ipconfig /release のあと、ipconfig /renew、最後に ipconfig を実行します（スペースの位置に注意）。`},
+
+{title:'DHCPを復旧して、外へも出られる？',focus:{dev:'server',view:'cfg'},
+ why:`<p>DHCPサービスを元に戻して、PC①にもう一度設定を配ります。ゲートウェイも一緒に配られるので、別のネットワーク（LAN2のPC②）にも届くはずです。</p>`,
+ todo:`<p>サーバのDHCPサービスを有効にして適用 → PC①で <code>ipconfig /renew</code> → <code>ping 192.168.2.21</code>（PC②）を実行。</p>`,
+ subs:[{t:'サーバのDHCPサービスを再び有効にした',f:S=>dhcpCfg(S)},
+       {t:'PC①がプール内のIPアドレスを取得し直した',f:S=>inPool(S)},
+       {t:'PC①から PC②（192.168.2.21）への ping で返事が来た',f:(S,c)=>pinged(S,c,'pc1','192.168.2.21',p=>p.ok)}],
+ after:`<p>DHCPが配ってくれたゲートウェイのおかげで、PC①は手作業なしでLAN2にも届きました。</p>`,
+ hint:`ミッション4の最初に設定した値（プール・ゲートウェイ・DNS）が残っているはずです。「DHCPサービスを有効にする」だけ戻して適用します。`},
+
+{title:'DHCPで配るのはIPアドレスだけじゃない',focus:{dev:'server',view:'cfg'},
+ why:`<p>DHCPが配るのは、IPアドレスだけではありません。<b>ゲートウェイ</b>や<b>DNSサーバ</b>も一緒に配ります。もし、配るゲートウェイが空だったら…？</p>`,
+ predict:{q:'DHCPで配る「ゲートウェイ」を空にして、PC①で再取得して PC②へ ping すると？',
+  opts:['届く','General failure（出口が配られないので送り出せない）','要求がタイムアウトする'],correct:1,
+  why:'ゲートウェイが配られないと、PC①は別の町へ送り出す出口を持たないため、ミッション2で見た General failure になります。'},
+ todo:`<p>① サーバのDHCP「配るゲートウェイ」を空にして適用<br>② PC①で <code>ipconfig /renew</code> → <code>ping 192.168.2.21</code>（届かないことを確認）<br>③ 配るゲートウェイを <code>192.168.1.1</code> に戻して適用 → PC①で <code>ipconfig /renew</code> → もう一度 <code>ping 192.168.2.21</code></p>`,
+ subs:[{t:'ゲートウェイが配られない状態で ping を打ち、届かないことを確認した',f:(S,c)=>pinged(S,c,'pc1','192.168.2.21',p=>!p.ok&&!p.gw)},
+       {t:'ゲートウェイを配る設定に戻し、PC①が受け取り直した',f:S=>same(S.dev.server.dhcp.gw,'192.168.1.1')&&!!S.dev.pc1.lease&&same(S.dev.pc1.lease.gw,'192.168.1.1')},
+       {t:'PC①から PC②（192.168.2.21）への ping で返事が来た',f:(S,c)=>pinged(S,c,'pc1','192.168.2.21',p=>p.ok)}],
+ after:`<p><b>サーバ側の設定を変えても、PC側は再取得（<code>ipconfig /renew</code>）するまで古い値のまま</b>です。実機でも、DHCPの設定変更のあとは再取得が必要です。</p>`,
+ hint:`サーバの設定を変えたら、必ず PC①で ipconfig /renew を実行しましょう。`},
+
+{title:'まとめ：DHCPのポイント',focus:null,
+ why:`<ul><li>DHCPは、IPアドレス・ゲートウェイ・DNSなどを<b>自動で配る</b></li><li>プールは、<b>固定IPと重ならない範囲</b>にする</li><li>配る<b>サブネットマスク</b>も、DHCPサーバの設定項目（クライアントはこの値を受け取る）</li><li><b>169.254.x.x</b> は「DHCPからもらえていない」サイン</li><li>設定を変えたら <code>ipconfig /renew</code> で再取得</li></ul><p>※ 考えてみよう：LAN2のPC②は、DHCPで取得できる？ DHCPの呼びかけは<b>同じLAN内にしか届かない</b>（ブロードキャスト）ので、LAN2でDHCPを使うには、ルータの<b>DHCPリレー</b>機能か、LAN2側にDHCPサーバが必要です。</p>`,
+ todo:`<p>「ミッション4を完了する」を押してください。</p>`,
+ subs:[]}
+];
+
+// ======== ミッション5：DNS ========
+const T5=[
+{title:'名前とIPアドレスをつなぐDNS',focus:null,
+ why:`<p>人間には <code>192.168.1.10</code> より <code>www.toyosho.example</code> のような名前のほうが覚えやすいですが、<b>コンピュータどうしの通信はすべてIPアドレス</b>で行われます。名前をIPアドレスに変換するしくみが <b>DNS</b>（Domain Name System）です。</p>`+URLVIZ+`<p>ブラウザにURLを入れると、まず<b>DNSサーバに「この名前のIPアドレスは？」と問い合わせ</b>、返ってきたIPアドレスのWebサーバへ接続します。DNSサーバは「名前とIPアドレスの対応表（台帳）」を持っています。</p>`,
+ todo:`<p>ミッション5では、「名前でつながらない」障害を切り分けて直します。読み終えたら「次のステップへ」。</p>`,
+ subs:[]},
+
+{title:'名前で ping してみる',focus:{dev:'pc2',view:'term'},
+ why:`<p>社員から「社内のWebサイト <code>www.toyosho.example</code> が開けない」と連絡がありました。PC②から、名前で ping してみましょう。PC②にはまだ<b>DNSサーバが設定されていません</b>。</p>`,
+ predict:{q:'PC②から <code>ping www.toyosho.example</code> を打つと？',
+  opts:['届く','「ping 要求ではホスト … が見つかりませんでした」と出る（名前をIPアドレスに変換できない）','要求がタイムアウトする'],correct:1,
+  why:'DNSサーバを知らないPC②は、名前をIPアドレスに変換できません。通信を始める前の段階で止まるため、「ホストが見つかりませんでした」と表示されます。'},
+ todo:`<p>PC②のターミナルで <code>ping www.toyosho.example</code> を実行。</p>`,
+ subs:[{t:'PC②から名前で ping を打ち、名前が解決できない表示を確認した',f:(S,c)=>pingedName(S,c,'pc2','www.toyosho.example',p=>p.nores)}],
+ after:`<p>この表示は「ネットワークが壊れている」とは限りません。<b>通信の前に、名前→IPアドレスの変換ができていない</b>という意味です。</p>`,
+ hint:`<code>ping www.toyosho.example</code> と入力します。`},
+
+{title:'切り分け：IPアドレスで ping してみる',focus:{dev:'pc2',view:'term'},
+ why:`<p>名前でダメなとき、<b>IPアドレスで直接 ping</b> してみると、原因が「ネットワーク」なのか「名前の変換」なのかを分けられます。サーバのIPアドレスは 192.168.1.10 です。</p>`,
+ predict:{q:'PC②から <code>ping 192.168.1.10</code>（IPアドレス直接）を打つと？',
+  opts:['届く（ネットワーク自体は正常で、名前の変換だけが問題）','届かない（ネットワークが壊れている）'],correct:0,
+  why:'ミッション3までで、PC②からサーバへの経路は作ってあります。IPアドレスでつながるなら、残る原因は<b>名前の変換（DNS）</b>です。'},
+ todo:`<p>PC②のターミナルで <code>ping 192.168.1.10</code> を実行。</p>`,
+ subs:[{t:'PC②から IPアドレスで ping を打ち、返事が来た',f:(S,c)=>pinged(S,c,'pc2','192.168.1.10',p=>p.ok)}],
+ after:`<p><b>名前でダメ・IPアドレスでOK → 原因はDNS</b>。実機でも「つながらない」ときの、いちばん役立つ切り分けです。</p>`,
+ hint:`PC②のターミナルで IPアドレスを指定して ping します。`},
+
+{title:'nslookup：DNSサーバに直接問い合わせる',focus:{dev:'pc2',view:'cfg'},
+ why:`<p><code>nslookup</code> は、<b>DNSサーバに「この名前のIPアドレスは？」と問い合わせて、結果を表示する</b>コマンドです。まず、PC②に使うDNSサーバ（192.168.1.10）を教えます。ただし、サーバの<b>DNSサービスはまだOFF</b>です。</p>`,
+ predict:{q:'PC②のDNSサーバーを 192.168.1.10 にして <code>nslookup www.toyosho.example</code> を打つと？（サーバのDNSサービスはOFF）',
+  opts:['IPアドレスが表示される','「DNS request timed out」と出る（DNSサーバが応答しない）','「Non-existent domain」と出る（そんな名前は無い）'],correct:1,
+  why:'DNSサービスが動いていないので、問い合わせに誰も返事をしません。その結果「timed out（時間切れ）」になります。'},
+ todo:`<p>PC②の設定画面で「優先 DNS サーバー」に <code>192.168.1.10</code> を入れて適用 → PC②のターミナルで <code>nslookup www.toyosho.example</code> を実行。</p>`,
+ subs:[{t:'PC②のDNSサーバーを 192.168.1.10 にした',f:S=>same(S.dev.pc2.dns,'192.168.1.10')},
+       {t:'PC②で nslookup www.toyosho.example を実行した',f:(S,c)=>ranc(S,c,'pc2',/^nslookup\s+www\.toyosho\.example\s*$/i)}],
+ hint:`DNSサーバーの欄は設定画面のいちばん下です。`},
+
+{title:'DNSサービスをONにする（台帳は空）',focus:{dev:'server',view:'cfg'},
+ why:`<p>サーバのDNSサービスを有効にします。ただし、まだ<b>名前の登録（レコード）は空</b>です。台帳に載っていない名前を聞かれたら、DNSサーバはどう答えるでしょう。</p>`,
+ predict:{q:'サーバのDNSサービスをONにして、PC②で <code>nslookup www.toyosho.example</code> を打つと？（レコードは未登録）',
+  opts:['IPアドレスが表示される','「DNS request timed out」','「Non-existent domain」（サーバは応答したが、その名前を知らない）'],correct:2,
+  why:'サーバは動いているので応答はしますが、台帳にその名前がないので「存在しないドメイン」と返します。<b>timed out（届かない・動いていない）</b>とは意味が違います。'},
+ todo:`<p>サーバの設定画面で「DNSサービスを有効にする」にチェックして適用 → PC②のターミナルで <code>nslookup www.toyosho.example</code> を実行。</p>`,
+ subs:[{t:'サーバのDNSサービスを有効にした',f:S=>S.dev.server.dnsSvc.on===true},
+       {t:'PC②で nslookup www.toyosho.example を実行した',f:(S,c)=>ranc(S,c,'pc2',/^nslookup\s+www\.toyosho\.example\s*$/i)}],
+ after:`<p><b>timed out</b>＝DNSサーバに届かない／動いていない、<b>Non-existent domain</b>＝DNSサーバは動いているが、その名前が登録されていない。表示の違いから、疑う場所が分かります。</p>`,
+ hint:`レコード欄はまだ空のままで構いません。`},
+
+{title:'レコードを登録して、名前でつなぐ',focus:{dev:'server',view:'cfg'},
+ why:`<p>DNSサーバの台帳に、<b>名前とIPアドレスの対応（レコード）</b>を登録します。登録するIPアドレスは、Webサーバ（このサーバ）の実際のIPアドレスです。</p>`,
+ todo:`<p>サーバの設定画面のレコード欄に、名前 <code>www.toyosho.example</code>、IPアドレス <code>192.168.1.10</code> を入力して適用 → PC②で <code>nslookup www.toyosho.example</code>、続けて <code>ping www.toyosho.example</code> を実行。</p>`,
+ subs:[{t:'レコード www.toyosho.example → 192.168.1.10 を登録した',f:S=>{const r=recOf(S,'www.toyosho.example');return !!r&&same(r.ip,'192.168.1.10');}},
+       {t:'PC②で nslookup を実行した',f:(S,c)=>ranc(S,c,'pc2',/^nslookup\s+www\.toyosho\.example\s*$/i)},
+       {t:'PC②から 名前で ping を打ち、返事が来た',f:(S,c)=>pingedName(S,c,'pc2','www.toyosho.example',p=>p.ok)}],
+ after:`<p>名前 → DNSサーバに問い合わせ → IPアドレスが分かる → そのIPアドレスへ通信、という流れで、名前でつながりました。</p>`,
+ hint:`名前欄とIPアドレス欄の両方を入力します。入力後は「適用」。`},
+
+{title:'自力チャレンジ：さっきまで開けたのに…',focus:{dev:'pc2',view:'term'},challenge:true,
+ enter:S=>{const r=recOf(S,'www.toyosho.example');if(r)r.ip='192.168.1.12';},
+ todo:`<p>🔥 「<b>www.toyosho.example が開けなくなった</b>。さっきまで動いていたのに」と連絡が来ました。手順の指示はありません。PC②から <code>nslookup</code>・<code>ping</code> などで状況を調べ、<b>自分で原因を見つけて直して</b>ください。</p>`,
+ subs:[{t:'PC②から 名前（www.toyosho.example）で ping を打ち、返事が来る',f:(S,c)=>pingedName(S,c,'pc2','www.toyosho.example',p=>p.ok)}],
+ hints:[`PC②で <code>nslookup www.toyosho.example</code> と <code>ping www.toyosho.example</code> を打って、結果を比べよう。`,
+  `nslookup でIPアドレスが返ってくるのに ping が届かない場合は、<b>返ってきたIPアドレスそのもの</b>を疑おう。そのIPアドレスに直接 ping したら？`,
+  `サーバのターミナルで <code>ipconfig</code> を打ち、サーバの本当のIPアドレスと、DNSに登録されているIPアドレスを見比べよう。`],
+ after:`<p>DNSの登録が <b>192.168.1.12</b>（打ち間違い）になっていました。<b>nslookup が答えを返しても、そのIPアドレスが正しいとは限りません</b>。返ってきたIPアドレスに直接 ping して、サーバの実際のIPアドレスと見比べるのが確認の基本です。</p>`},
+
+{title:'まとめ：名前でつながらないとき',focus:null,
+ why:`<table class="sheet"><tr><th>表示</th><th>意味</th><th>疑う場所</th></tr><tr><td class="m">ホストが見つかりませんでした</td><td>名前→IPの変換ができない</td><td>DNSサーバの設定が入っているか</td></tr><tr><td class="m">DNS request timed out</td><td>DNSサーバが応答しない</td><td>DNSサーバのアドレス・サービスの状態・経路</td></tr><tr><td class="m">Non-existent domain</td><td>DNSサーバは動いているが、名前が未登録</td><td>DNSサーバの台帳（レコード）</td></tr><tr><td class="m">IPは返るが ping が届かない</td><td>登録されたIPが違う可能性</td><td>レコードのIPアドレス</td></tr></table><p><b>名前でダメならIPアドレスで試す</b>。これで「ネットワークの問題」か「名前の問題」かを分けられます。</p>`,
+ todo:`<p>「ミッション5を完了する」を押してください。</p>`,
+ subs:[]}
+];
+
+// ======== ミッション6：Web（HTTP/HTTPS） ========
+const PORTVIZ=`<div class="ipviz"><div class="row"><span class="o net">https</span><span class="o net">://</span><span class="o host">www.toyosho.example</span><span class="o net">:443</span><span class="o host">/news.html</span></div><div class="cap"><span class="o net">青</span>＝通信のきまり（プロトコル・ポート番号）　<span class="o host">橙</span>＝場所（サーバの名前・ページ）</div></div>`;
+const T6=[
+{title:'ping の先へ：サービスと「窓口」',focus:null,
+ why:`<p>ここまでの ping は「<b>建物（機器）まで届くか</b>」の確認でした。しかし実際に使うのは、建物の中の<b>サービス</b>です。Webサイトを見るときは、ブラウザ（クライアント）がサーバに<b>「このページをください」（要求）</b>と送り、サーバが<b>ページの内容（応答）</b>を返します。このやり取りのルールが <b>HTTP</b>（HyperText Transfer Protocol）、通信を暗号化したものが <b>HTTPS</b> です。</p><p>1台のサーバには、Web・メール・名前の変換など複数のサービスが同居できます。そこで、IPアドレス（建物の住所）に加えて<b>ポート番号（建物の中の窓口番号）</b>で「どのサービスに用があるか」を指定します。</p><table class="sheet"><tr><th>ポート番号</th><th>サービス</th></tr><tr><td class="m">80</td><td>HTTP（Web）</td></tr><tr><td class="m">443</td><td>HTTPS（暗号化されたWeb）</td></tr><tr><td class="m">53</td><td>DNS（名前の変換）</td></tr><tr><td class="m">25 / 110</td><td>メール送信（SMTP）／メール受信（POP3）</td></tr></table>`+PORTVIZ+`<p>URLのポート番号を省略すると、http なら 80、https なら 443 を使います。</p>`,
+ todo:`<p>ミッション6のゴールは、「<b>pingは通るのにサイトが開けない</b>」障害を、窓口（ポート）の考え方で切り分けられるようになることです。PCのタブに <b>🌐 ブラウザ</b> が加わります。読み終えたら「次のステップへ」。</p>`,
+ subs:[]},
+
+{title:'pingは通るのに、サイトが開けない？',focus:{dev:'pc2',view:'term'},
+ why:`<p>社員から「社内サイト <code>http://www.toyosho.example</code> が開けない」と連絡がありました。名前（DNS）もIPアドレスもルータも、これまでのミッションで整備済みです。ただし、<b>サーバのWebサービス</b>は、まだ起動していません。</p><p>「pingが通る」ことと「サイトが見られる」ことが同じかどうか、確かめてみましょう。</p>`,
+ predict:{q:'サーバのWebサービスが止まっている状態で、PC②のブラウザで <code>http://www.toyosho.example</code> を開くと？',
+  opts:['ページが表示される（pingが通るから）','「接続が拒否されました（ERR_CONNECTION_REFUSED）」と出る','「DNSアドレスが見つかりません」と出る'],correct:1,
+  why:'サーバ（建物）までは届いても、80番の窓口（Webサービス）が開いていないので、接続を断られます。名前の変換（DNS）は成功しているので、DNSのエラーにはなりません。'},
+ todo:`<p>① PC②の「ターミナル」で <code>ping www.toyosho.example</code> を実行（通ることを確認）<br>② PC②の「🌐 ブラウザ」タブを開き、アドレスバーに <code>http://www.toyosho.example</code> と入力して「開く」。</p>`,
+ subs:[{t:'PC②から名前で ping を打ち、返事が来た',f:(S,c)=>pingedName(S,c,'pc2','www.toyosho.example',p=>p.ok)},
+       {t:'PC②のブラウザで http://www.toyosho.example を開き、接続が拒否されることを確認した',f:(S,c)=>webd(S,c,'pc2',p=>p.kind==='refused'&&p.scheme==='http'&&p.host==='www.toyosho.example')}],
+ after:`<p><b>pingは届くのに、サイトは開けない</b>。これが「建物（IPアドレス）」と「窓口（ポート・サービス）」の違いです。</p><ul><li><b>ping が通る</b>：その機器まで届いて、応答している</li><li><b>接続が拒否された（ERR_CONNECTION_REFUSED）</b>：機器には届いたが、その窓口（ポート）でサービスが待ち受けていない</li></ul><p>「拒否された」は、「届いてはいる」という手がかりです。届かない（タイムアウト）のとは別物です。</p><p class="note">※ この演習環境では、サービスが止まっていると「接続拒否」になります。実機では、ファイアウォールが通信を破棄する設定だと、同じ状況でもタイムアウトになることがあります。</p>`,
+ hint:`ブラウザは、PC②のタブで「🌐 ブラウザ」を選ぶと出ます。`},
+
+{title:'Webサービスを有効にする',focus:{dev:'server',view:'cfg'},
+ why:`<p>サーバに「Webサービス」の窓口を開きます。<b>HTTPサービス</b>は80番ポートで待ち受けるのが標準です。</p>`,
+ todo:`<p>サーバの設定画面の「Webサービス」で、「HTTPサービスを有効にする」にチェックを入れ、ポート番号は <code>80</code> のまま「適用」。そのあと、PC②のブラウザで <code>http://www.toyosho.example</code> を開きましょう。</p>`,
+ subs:[{t:'サーバのHTTPサービスをポート80で有効にした',f:S=>!!S.dev.server.web.http&&String(S.dev.server.web.httpPort)==='80'},
+       {t:'PC②のブラウザで http://www.toyosho.example を開き、ページが表示された',f:(S,c)=>webd(S,c,'pc2',p=>p.kind==='ok'&&p.scheme==='http'&&p.host==='www.toyosho.example'&&p.port===80)}],
+ after:`<p>ページが表示されました。ブラウザは、<b>名前 → DNSでIPアドレス → 80番の窓口に要求 → 応答</b>の順に動いています。ここまでのミッションの全部がつながりました。</p><p>サーバの応答には<b>ステータスコード</b>（3桁の数字）が付いて、結果を表します。</p><table class="sheet"><tr><th>コード</th><th>意味</th><th>例</th></tr><tr><td class="m">2xx</td><td>成功</td><td>200 OK</td></tr><tr><td class="m">3xx</td><td>転送（別の場所へ）</td><td>301 Moved Permanently</td></tr><tr><td class="m">4xx</td><td>要求が間違っている（利用者側）</td><td>404 Not Found</td></tr><tr><td class="m">5xx</td><td>サーバ側の失敗</td><td>500 Internal Server Error</td></tr></table>`,
+ hint:`「HTTPサービスを有効にする」のチェックを入れたあと、「適用」ボタンを押します。ブラウザはPC②のタブです。`},
+
+{title:'curl：コマンドでWebに要求する',focus:{dev:'pc2',view:'term'},
+ why:`<p>ブラウザが使えない場面（サーバのコンソール作業など）では、<code>curl</code> コマンドでWebに要求を出せます。実機のWindowsにも入っています。<code>-i</code> を付けると、応答の先頭に<b>ステータス行</b>（HTTP/1.1 200 OK など）も表示されます。</p>`,
+ predict:{q:'<code>curl -i http://www.toyosho.example</code> の結果、1行目のステータス行は？',
+  opts:['HTTP/1.1 200 OK','HTTP/1.1 404 Not Found','curl: (7) Failed to connect …'],correct:0,
+  why:'Webサービスが動いていて、ページも存在するので、成功を表す 200 OK が返ります。'},
+ todo:`<p>PC②のターミナルで <code>curl -i http://www.toyosho.example</code> を実行。</p>`,
+ subs:[{t:'PC②で curl -i を使ってWebの応答を取得した',f:(S,c)=>webd(S,c,'pc2',p=>p.via==='curl'&&p.incl&&p.kind==='ok'&&p.host==='www.toyosho.example')}],
+ after:`<p>応答は「ステータス行 → ヘッダ → 空行 → 本文」の順です。1行目の <b>200 OK</b> が成功を表します。ブラウザの表示は、この本文（HTML）をきれいに描画したものです。</p>`,
+ hint:`<code>curl</code>、半角スペース、<code>-i</code>、半角スペース、URL の順に入力します。`},
+
+{title:'404：サーバには届いている',focus:{dev:'pc2',view:'web'},
+ why:`<p>アドレスの打ち間違いで、<b>存在しないページ</b>を開いたらどうなるでしょう。サーバの窓口は開いていて、名前もIPアドレスも正しい状態です。</p>`,
+ predict:{q:'ブラウザで <code>http://www.toyosho.example/menu.html</code>（存在しないページ）を開くと？',
+  opts:['「404 Not Found」のページが表示される','「接続が拒否されました」と出る','「DNSアドレスが見つかりません」と出る'],correct:0,
+  why:'サーバまで届いて応答しているので、接続のエラーにはなりません。「そのページは無い」という応答（404）が返ります。'},
+ todo:`<p>PC②のブラウザで <code>http://www.toyosho.example/menu.html</code> を開く。</p>`,
+ subs:[{t:'存在しないページを開き、404の応答を確認した',f:(S,c)=>webd(S,c,'pc2',p=>p.kind==='notfound'&&p.host==='www.toyosho.example')}],
+ after:`<p><b>404 が表示された＝サーバまでは届いて、サーバが応答している</b>、という証拠です。名前・経路・サービスは正常で、<b>URLの後ろ（ページの場所）</b>だけが違います（この演習では、URLの打ち間違いとして扱います。実機では、サーバ設定や公開漏れが原因のこともあります）。エラーの種類で、疑う場所が変わります。</p><table class="sheet"><tr><th>ブラウザの表示</th><th>どこまで届いた？</th><th>疑う場所</th></tr><tr><td class="m">DNSアドレスが見つかりません</td><td>名前の変換で止まった</td><td>DNS（名前・DNSサーバの設定）</td></tr><tr><td class="m">応答時間が長すぎます</td><td>サーバまで届かない</td><td>経路（ゲートウェイ・ルータ）</td></tr><tr><td class="m">接続が拒否されました</td><td>サーバには届いた</td><td>Webサービス・ポート番号</td></tr><tr><td class="m">404 Not Found</td><td>サーバが応答した</td><td>URLのページ名（利用者側）</td></tr></table>`,
+ hint:`アドレスバーに URL を入力して「開く」を押します。ページ名は menu.html です。`},
+
+{title:'ポート番号：窓口の番号を変えると？',focus:{dev:'server',view:'cfg'},
+ why:`<p>サーバのHTTPサービスの待ち受けポートを <b>8080</b> に変更してみます（テスト用のWebサイトでよく使われる番号です）。ポート番号を省略したURLは、http なら80番へ要求します。</p>`,
+ predict:{q:'サーバのHTTPポートを 8080 に変えたあと、<code>http://www.toyosho.example</code>（ポート省略）を開くと？',
+  opts:['これまでどおり表示される','接続が拒否される（80番の窓口はもう閉じている）','404 Not Found になる'],correct:1,
+  why:'ポートを省略すると80番に要求しますが、サーバは8080番でしか待ち受けていないので、80番は拒否されます。<b>URLの末尾に :8080 を付ければ</b>、8080番の窓口に届きます。'},
+ todo:`<p>① サーバのHTTPポートを <code>8080</code> に変えて適用<br>② PC②のブラウザで <code>http://www.toyosho.example</code> を開く（拒否されることを確認）<br>③ 続けて <code>http://www.toyosho.example:8080</code> を開く（表示される）<br>④ 確認できたら、サーバのHTTPポートを <code>80</code> に戻して適用</p>`,
+ subs:[{t:'ポート省略（80番）で開き、接続が拒否されることを確認した',f:(S,c)=>webd(S,c,'pc2',p=>p.kind==='refused'&&p.scheme==='http'&&p.host==='www.toyosho.example'&&p.port===80)},
+       {t:'http://www.toyosho.example:8080 で表示された',f:(S,c)=>webd(S,c,'pc2',p=>p.kind==='ok'&&p.scheme==='http'&&p.port===8080)},
+       {t:'サーバのHTTPポートを 80 に戻した',f:S=>!!S.dev.server.web.http&&String(S.dev.server.web.httpPort)==='80'}],
+ after:`<p>同じサーバ・同じIPアドレスでも、<b>ポート番号が違えば別の窓口</b>です。URLの末尾の <code>:8080</code> は、「80番ではなく8080番の窓口へ」という指定です。ポート番号の設定ミスは、実務でもよくある原因です。</p>`,
+ hint:`設定を変えたら、サーバの「適用」を押します。ブラウザで開くのは PC② のタブです。`},
+
+{title:'HTTPS：暗号化された窓口（443番）',focus:{dev:'pc2',view:'web'},
+ why:`<p>HTTP の通信は<b>平文</b>（暗号化されない）で流れるので、途中で盗み見や書き換えをされる恐れがあります。そこで、通信を暗号化して<b>盗聴・改ざんを防ぎ</b>、さらに<b>通信相手が本物のサーバか</b>を<b>証明書</b>で確認できるようにしたものが <b>HTTPS</b> です（TLSという暗号化のしくみを使います）。標準のポートは <b>443番</b>です。ログイン画面や個人情報を扱うサイトでは必須です。</p>`,
+ predict:{q:'サーバのHTTPSサービスがOFFのとき、<code>https://www.toyosho.example</code> を開くと？',
+  opts:['HTTPと同じように表示される','接続が拒否される（443番の窓口が開いていない）','「DNSアドレスが見つかりません」と出る'],correct:1,
+  why:'<b>HTTPとHTTPSは別の窓口</b>（80番と443番）です。HTTPが動いていても、HTTPSを有効にしていなければ443番は閉じたままです。'},
+ todo:`<p>① PC②のブラウザで <code>https://www.toyosho.example</code> を開く（拒否される）<br>② サーバの設定画面で「HTTPSサービスを有効にする」（ポート <code>443</code>）にチェックして適用<br>③ もう一度 <code>https://www.toyosho.example</code> を開く</p>`,
+ subs:[{t:'HTTPSサービスが無効の状態で開き、接続が拒否されることを確認した',f:(S,c)=>webd(S,c,'pc2',p=>p.kind==='refused'&&p.scheme==='https'&&p.host==='www.toyosho.example')},
+       {t:'サーバのHTTPSサービスをポート443で有効にした',f:S=>!!S.dev.server.web.https&&String(S.dev.server.web.httpsPort)==='443'},
+       {t:'https://www.toyosho.example が表示された（🔒）',f:(S,c)=>webd(S,c,'pc2',p=>p.kind==='ok'&&p.scheme==='https'&&p.host==='www.toyosho.example'&&p.port===443&&!p.insecure)}],
+ after:`<p>アドレスバーに <b>🔒</b> が出ました。「通信が暗号化され、サーバの証明書も確認できた」というしるしです。<code>http://</code> のサイトでは「保護されていない通信」と表示されます。</p>`,
+ hint:`https:// の「s」を忘れずに。サーバの設定画面でHTTPSのチェックを入れて「適用」を押します。`},
+
+{title:'IPアドレスで https を開くと…（証明書の警告）',focus:{dev:'pc2',view:'web'},
+ why:`<p>HTTPSでは、サーバが<b>証明書</b>を見せます。証明書は「このサーバは <b>www.toyosho.example</b> です」という<b>名前に対して</b>発行されていて、ブラウザは<b>入力した名前と証明書の名前が一致するか</b>を確かめます。では、IPアドレスで直接アクセスしたら？</p>`,
+ predict:{q:'<code>https://192.168.1.10</code>（IPアドレス直接）を開くと？',
+  opts:['問題なく🔒で表示される','「接続のプライバシーが保護されていません」と警告が出る','接続が拒否される'],correct:1,
+  why:'証明書の名前は www.toyosho.example で、192.168.1.10 とは一致しません。ブラウザは「本物のサーバか確認できない」と判断して警告します。'},
+ todo:`<p>PC②のブラウザで <code>https://192.168.1.10</code> を開き、警告の内容を読みましょう。<b>「続行」は押さないで</b>、まず警告の意味を考えます。</p>`,
+ subs:[{t:'IPアドレスでhttpsを開き、証明書の警告を確認した',f:(S,c)=>webd(S,c,'pc2',p=>p.kind==='cert'&&p.host==='192.168.1.10')}],
+ after:`<p>警告が出ても、サーバとの通信自体は届いています。問題は<b>「相手が本物か確認できない」</b>ことです。実務では、警告を無視して進める習慣は危険です（偽のサーバに接続しても気づけません）。対処は、<b>証明書の名前と同じ名前でアクセスする</b>か、正しい証明書を設定することです。</p><p>※ <code>curl -k</code> は警告を無視して接続するオプションです。動作確認の道具であって、日常の利用には使いません。</p>`,
+ hint:`アドレスバーに https://192.168.1.10 と入力して「開く」を押します。`},
+
+{title:'自力チャレンジ：httpは開けるのに、httpsが開けない',focus:{dev:'pc2',view:'web'},challenge:true,
+ enter:S=>{const w=S.dev.server.web;w.http=true;w.httpPort='80';w.https=true;w.httpsPort='8443';},
+ todo:`<p>🔥 「<b>http://www.toyosho.example は開けるのに、https://www.toyosho.example だけ開けない</b>」という連絡が来ました。指示はありません。ブラウザ・<code>curl</code>・設定画面を使って原因を見つけ、<b>https://www.toyosho.example（ポート番号なし）で表示される</b>ようにしてください。</p>`,
+ subs:[{t:'PC②から https://www.toyosho.example（ポート指定なし）で表示された',f:(S,c)=>webd(S,c,'pc2',p=>p.kind==='ok'&&p.scheme==='https'&&p.host==='www.toyosho.example'&&p.port===443&&!p.insecure)}],
+ hints:[`ブラウザで http:// と https:// の両方を開いて、エラーの種類を読もう。「接続が拒否されました」は、窓口（ポート）の問題を疑うサインでした。`,
+  `httpは開けるので、名前・経路・HTTPサービスは正常です。疑うのはHTTPSの窓口だけ。サーバの設定画面で、HTTPSサービスの状態とポート番号を確認しよう。`,
+  `HTTPSサービスのポート番号が <b>8443</b> になっています。標準の <b>443</b> に直して適用しよう。（URLに :8443 を付ければ開けますが、利用者に毎回付けてもらうのは現実的ではありません）`],
+ after:`<p>HTTPSのポート番号が <b>8443</b> になっていました。URLのポート番号を省略すると443番へ要求するので、サーバ側が標準の443で待ち受けている必要があります。<b>「httpはOK、httpsだけNG」</b>のときは、<b>HTTPSの窓口（サービス・ポート・証明書）</b>だけを疑えば絞り込めます。</p>`},
+
+{title:'まとめ：Webが開けないときの切り分け',focus:null,
+ why:`<table class="sheet"><tr><th>状況</th><th>意味</th><th>疑う場所</th></tr><tr><td class="m">DNSアドレスが見つかりません</td><td>名前の変換で止まった</td><td>DNS（クライアントのDNS設定・サーバのレコード）</td></tr><tr><td class="m">応答時間が長すぎます</td><td>サーバまで届かない</td><td>経路（ゲートウェイ・ルータ）</td></tr><tr><td class="m">接続が拒否されました</td><td>サーバには届いた</td><td>Webサービスの状態・ポート番号</td></tr><tr><td class="m">404 Not Found</td><td>サーバが応答した</td><td>URLのページ名</td></tr><tr><td class="m">証明書の警告</td><td>相手が本物か確認できない</td><td>アクセスした名前と証明書の名前の不一致</td></tr><tr><td class="m">httpだけ／httpsだけ開ける</td><td>窓口（80／443）が別</td><td>開けない方のサービスとポート</td></tr></table><p>確認の順番は <b>自分 → ゲートウェイ → 相手のIP（ping）→ 名前（nslookup）→ 窓口（ポート・サービス）→ ページ（URL）</b>。ここまで来れば、Webの障害も、同じ「近いところから順に」で切り分けられます。</p>`,
+ todo:`<p>「ミッション6を完了する」を押してください。</p>`,
+ subs:[]}
+];
+
+// ======== ミッション7：ネットワーク設計（サブネット） ========
+const FIXLAN=`<div class="note">この画面の「🧮 計算機」タブ（どの機器でも開けます）で、答え合わせ用に計算できます。</div>`;
+const subCfgOk=S=>{
+  const d=S.dev,r=d.router,sv=d.server;
+  return {
+    r1:same(r.if1.ip,'192.168.1.1')&&same(r.if1.mask,'255.255.255.192'),
+    r2:same(r.if2.ip,'192.168.1.65')&&same(r.if2.mask,'255.255.255.224'),
+    sv:same(sv.ip,'192.168.1.10')&&same(sv.mask,'255.255.255.192')&&same(sv.gw,'192.168.1.1'),
+    dh:poolOk(S),
+    p2:d.pc2.mode!=='dhcp'&&same(d.pc2.ip,'192.168.1.66')&&same(d.pc2.mask,'255.255.255.224')&&same(d.pc2.gw,'192.168.1.65')&&same(d.pc2.dns,'192.168.1.10'),
+    p1:pc1InPool(S)
+  };
+};
+// DHCPプールが「サブネットの内側」で「固定IP（.1 ルータ／.10 サーバ）を避け」「10個以上」あること
+function poolOk(S){
+  const h=S.dev.server.dhcp;if(!h.on)return false;
+  const a=ip2n(h.start),b=ip2n(h.end);if(a===null||b===null||a>b)return false;
+  const lo=ip2n('192.168.1.2'),hi=ip2n('192.168.1.62'),sv=ip2n('192.168.1.10');
+  if(a<lo||b>hi||b-a+1<10)return false;
+  if(a<=sv&&sv<=b)return false;
+  return same(h.gw,'192.168.1.1')&&same(h.dns,'192.168.1.10')&&same(h.mask,'255.255.255.192');
+}
+function pc1InPool(S){
+  const p=S.dev.pc1,l=p.lease;if(p.mode!=='dhcp'||!l)return false;
+  const x=ip2n(l.ip),h=S.dev.server.dhcp;
+  return poolOk(S)&&x>=ip2n(h.start)&&x<=ip2n(h.end)&&same(l.mask,'255.255.255.192')&&same(l.gw,'192.168.1.1');
+}
+const T7=[
+{title:'なぜネットワークを分けるのか',focus:null,
+ why:`<p>これまでは「192.168.1.<b>x</b>」と「192.168.2.<b>x</b>」を、3つ目の数字で分けていました。でも、実際の会社はもっと細かく分けます。たとえば<b>経理部</b>・<b>営業部</b>・<b>サーバ室</b>・<b>来客用Wi-Fi</b>。なぜでしょう？</p><ul><li><b>セキュリティ</b>：経理のデータを、他の部署や来客から見えにくくできる（ルータで通信を制限できる）</li><li><b>性能</b>：ブロードキャスト（「全員に呼びかける」通信）が届く範囲が小さくなり、ネットワークが軽くなる</li><li><b>管理</b>：障害が起きたとき、影響範囲が分かりやすい</li></ul><p>ただし、<b>アドレスは無限にはありません</b>。1つの 192.168.1.0〜255 の範囲（254台分）を、部署の人数に合わせて<b>ちょうどよい大きさに切り分ける</b>。これが「<b>サブネット設計</b>」で、ネットワーク担当者の大事な仕事です。</p><p>切り分ける道具が<b>サブネットマスク</b>です。このミッションでは、<b>① マスクの読み方 → ② 台数の計算 → ③ 同じネットワークかの判定 → ④ 部署ごとの設計 → ⑤ 機器への設定</b>の順に進みます。</p>`,
+ todo:`<p>読み終えたら「次のステップへ」。このミッションは<b>計算問題</b>があります。答えは自分で計算して入力し、「答え合わせ」で確認します（計算機は答え合わせ用です）。</p>`,
+ subs:[]},
+
+{title:'マスクの正体：32ビットを2つに分ける',focus:{dev:'server',view:'calc'},
+ why:`<p>IPアドレスは、実は<b>32個の0と1</b>（2進数）です。「192.168.1.10」は 8ビットずつ4つに区切って、<b>11000000.10101000.00000001.00001010</b> と書けます。</p><p>サブネットマスクは、その32ビットを「<b>前半＝ネットワーク部（町名）</b>」と「<b>後半＝ホスト部（番地）</b>」に分ける<b>区切り線</b>です。マスクの 1 が続いている部分がネットワーク部です。</p><table class="sheet"><tr><th>マスク</th><th>1の数</th><th>書き方（CIDR）</th><th>ホスト部</th></tr><tr><td class="m">255.255.255.0</td><td>24個</td><td class="m">/24</td><td>8ビット</td></tr><tr><td class="m">255.255.255.192</td><td>26個</td><td class="m">/26</td><td>6ビット</td></tr><tr><td class="m">255.255.255.224</td><td>27個</td><td class="m">/27</td><td>5ビット</td></tr></table><p>実務では <b>192.168.1.0/26</b> のように、<b>「/ ＋ 1の数」</b>で書くのが普通です（<b>CIDR表記</b>）。マスクの 192 や 224 は、8ビットのうち 1 が2個（128+64=192）、3個（128+64+32=224）並んだ値です。</p>`,
+ predict:{q:'<code>192.168.1.200 /26</code> のホスト部は何ビット？（32ビット全体から、ネットワーク部を引く）',
+  opts:['26ビット','6ビット','8ビット'],correct:1,
+  why:'32 − 26 ＝ 6ビット。ネットワーク部が26ビットなので、残りの6ビットがホスト部（番地）です。'},
+ todo:`<p>画面の「🧮 計算機」が開いています。IPアドレスに <code>192.168.1.200</code>、マスクに <code>/26</code> を入力して、<b>青（ネットワーク部）と橙（ホスト部）の境目</b>を確認しましょう。マスクを <code>/24</code> や <code>/27</code> に変えると、境目が動きます。</p>`,
+ subs:[{t:'計算機で 192.168.1.200 /26 を入力し、境目を確認した',f:(S,c)=>S.calcs.slice(c.cl||0).some(x=>x.ip==='192.168.1.200'&&x.prefix===26)}],
+ after:`<p>境目の位置が変わると、<b>ホスト部（橙）の長さ</b>が変わります。ホスト部が長いほど、番地（=機器に付けられる数）が多い、大きなネットワークです。</p><p>192.168.1.200 /26 の場合、ネットワーク部の最後の 8ビット目は <b>11</b>001000 ＝ 200 のうち上位2ビットが町名、下位6ビットが番地になります。</p>`,
+ hint:`計算機の「IPアドレス」に 192.168.1.200、「マスク」に /26 と入力します。入力するたびに、下の表示が変わります。`},
+
+{title:'使える台数：2のホスト部ビット乗 − 2',focus:{dev:'server',view:'calc'},
+ why:`<p>ホスト部が <b>h ビット</b>なら、番地の組み合わせは 2<sup>h</sup> 個です。ただし、次の<b>2つは機器に付けられません</b>。</p><ul><li><b>ネットワークアドレス</b>（ホスト部が全部 0）：「このネットワーク全体」を指す名前</li><li><b>ブロードキャストアドレス</b>（ホスト部が全部 1）：「このネットワークの全員」に呼びかける宛先</li></ul><p>だから、<b>使える台数 ＝ 2<sup>h</sup> − 2</b> です。</p><table class="sheet"><tr><th>CIDR</th><th>ホスト部</th><th>アドレス数</th><th>使える台数</th></tr><tr><td class="m">/24</td><td>8</td><td>256</td><td>254</td></tr><tr><td class="m">/26</td><td>6</td><td>64</td><td>62</td></tr><tr><td class="m">/27</td><td>5</td><td>32</td><td>30</td></tr><tr><td class="m">/28</td><td>4</td><td>16</td><td>14</td></tr><tr><td class="m">/29</td><td>3</td><td>8</td><td>6</td></tr><tr><td class="m">/30</td><td>2</td><td>4</td><td>2</td></tr></table><p><b>実務の注意</b>：使える台数には、<b>ルータ（ゲートウェイ）のアドレス</b>も含まれます。「PC 30台」のネットワークには、ルータ分で<b>31個</b>のアドレスが必要です。</p><p class="note">※ 2<sup>h</sup> − 2 は、通常のLAN（ブロードキャスト型）の計算です。ルータ間の1対1のリンクで使う <b>/31</b>（2台、RFC 3021）と、1つのアドレスだけを表す <b>/32</b> は例外です。</p>`,
+ todo:`<p>計算機に <code>192.168.1.0</code> ／ <code>/27</code> を入力して、使える台数と「使えるアドレスの範囲」を確認しましょう。</p>`,
+ subs:[{t:'計算機で 192.168.1.0 /27 を入力し、使える台数を確認した',f:(S,c)=>S.calcs.slice(c.cl||0).some(x=>x.ip==='192.168.1.0'&&x.prefix===27)}],
+ after:`<p>/27 は ホスト部5ビット → 2<sup>5</sup> − 2 ＝ <b>30台</b>。範囲は 192.168.1.<b>1〜30</b>、ネットワークアドレスは .0、ブロードキャストは .31 でした。</p><p><b>暗記のコツ</b>：「256 − マスクの最後の数字」が<b>ブロックの大きさ</b>です。255.255.255.<b>224</b> なら 256 − 224 ＝ 32。つまり、アドレスは 32個ずつのかたまり（.0〜.31、.32〜.63、…）に区切られます。</p>`,
+ hint:`IPアドレス欄に 192.168.1.0、マスク欄に /27 と入力します。`},
+
+{title:'計算問題①：台数を答えよう',focus:{dev:'server',view:'calc'},
+ why:`<p>次の4問を、<b>電卓や計算機を使わずに</b>、まず自分で考えてみましょう。<b>「32 − 数字 ＝ ホスト部」→「2のべき乗 − 2」</b>の2ステップです。</p><p>2のべき乗：2<sup>2</sup>=4、2<sup>3</sup>=8、2<sup>4</sup>=16、2<sup>5</sup>=32、2<sup>6</sup>=64、2<sup>7</sup>=128、2<sup>8</sup>=256</p>`,
+ quiz:{title:'使える台数（ホスト）を答えよう',items:[
+  {id:'a',q:'192.168.10.0 <b>/25</b> で使える台数は？',type:'num',answer:126,ph:'台数を入力',hint:'32 − 25 ＝ 7ビット。2の7乗 ＝ 128 から、ネットワークアドレスとブロードキャストの2つを引きます。',exp:'ホスト部7ビット → 2<sup>7</sup> − 2 ＝ 126台。'},
+  {id:'b',q:'192.168.10.0 <b>/27</b> で使える台数は？',type:'num',answer:30,ph:'台数を入力',hint:'32 − 27 ＝ 5ビット。2の5乗は 32 です。',exp:'ホスト部5ビット → 2<sup>5</sup> − 2 ＝ 30台。'},
+  {id:'c',q:'サブネットマスク <b>255.255.255.240</b> で使える台数は？',type:'num',answer:14,ph:'台数を入力',hint:'256 − 240 ＝ 16 がブロックの大きさ（アドレスの個数）です。',exp:'256 − 240 ＝ 16個のアドレス → 16 − 2 ＝ 14台。（240 は /28 です）'},
+  {id:'d',q:'ルータどうしを結ぶ2点間のリンクに使う <b>/30</b> で使える台数は？',type:'num',answer:2,ph:'台数を入力',hint:'32 − 30 ＝ 2ビット。2の2乗は 4 です。',exp:'ホスト部2ビット → 2<sup>2</sup> − 2 ＝ 2台。ルータ2台だけをつなぐ用途にぴったりで、実務でもよく使われます。'}
+ ]},
+ todo:`<p>4問すべてに答えて「答え合わせ」を押してください。間違えるとヒントが出ます。計算機（🧮）で確かめても構いません。</p>`,
+ subs:[],
+ after:`<p>全問正解です。<b>「ホスト部のビット数 → 2のべき乗 − 2」</b>で台数が出せるようになりました。</p>`},
+
+{title:'同じネットワークはどれ？（ping で確かめる）',focus:{dev:'pc1',view:'term'},
+ enter:S=>{const d=S.dev;
+   Object.assign(d.server,{ip:'192.168.1.130',mask:'255.255.255.192',gw:''});
+   Object.assign(d.pc1,{mode:'manual',ip:'192.168.1.100',mask:'255.255.255.192',gw:'',dns:'',lease:null});},
+ why:`<p>ここが一番、実務で役立つ考え方です。<b>2台が同じネットワークか</b>は、<b>それぞれのIPアドレスとマスクで AND（論理積）を取った結果</b>が同じかどうかで決まります。これは、「ネットワーク部が同じか」と同じ意味です。</p><p>やり方は簡単です。<b>ブロックの大きさ</b>で区切って、どのかたまりに入るかを見ます。</p><p>例：<b>192.168.1.130 /26</b> → 256 − 192 ＝ 64個ずつ → かたまりは <b>.0〜63 ／ .64〜127 ／ .128〜191 ／ .192〜255</b>。130 は「.128〜191」のかたまり。つまりネットワークアドレスは <b>192.168.1.128</b>、ブロードキャストは <b>192.168.1.191</b>、使える範囲は .129〜.190 です。</p><p>サーバ（192.168.1.130 /26）が、いま構成されています。PC①は 192.168.1.<b>100</b> /26 です。</p>`,
+ quiz:{title:'サーバ 192.168.1.130 /26 について',items:[
+  {id:'a',q:'このネットワークの<b>ネットワークアドレス</b>は？（192.168.1.○）',type:'num',answer:128,ph:'最後の数字',hint:'64個ずつのかたまり：0、64、128、192 のうち、130 が入るのはどれ？',exp:'64個ずつ区切ると 128〜191。先頭の 128 がネットワークアドレスです。'},
+  {id:'b',q:'このネットワークの<b>ブロードキャストアドレス</b>は？（192.168.1.○）',type:'num',answer:191,ph:'最後の数字',hint:'ホスト部が全部1（=かたまりの最後）です。',exp:'かたまり 128〜191 の最後なので 191 です。'},
+  {id:'c',q:'サーバと<b>同じネットワーク</b>にいるのは、次のうちどのPC？',type:'choice',opts:['192.168.1.100 /26','192.168.1.150 /26','192.168.1.200 /26','192.168.1.10 /26'],answer:1,hint:'128〜191 のかたまりに入っているアドレスはどれ？',exp:'150 は 128〜191 に入っています。100 は「64〜127」、200 は「192〜255」、10 は「0〜63」のかたまりです。'}
+ ]},
+ todo:`<p>① 上の3問に答えて「答え合わせ」。<br>② 答えを<b>ping で確かめます</b>。PC①のターミナルで <code>ping 192.168.1.130</code> を実行（PC①は今 192.168.1.100 /26 です。届くでしょうか？）<br>③ PC①の設定画面で、IPアドレスを<b>あなたの答えの「同じネットワーク」のアドレス（192.168.1.150）</b>に変えて「適用」し、もう一度 <code>ping 192.168.1.130</code>。</p>`,
+ subs:[{t:'PC①（192.168.1.100 /26）からサーバへ ping し、届かないことを確認した',f:(S,c)=>pinged(S,c,'pc1','192.168.1.130',p=>!p.ok&&p.sip==='192.168.1.100'&&p.smask==='255.255.255.192')},
+       {t:'PC①の IP を同じネットワークのアドレスに変え、ping が届いた',f:(S,c)=>pinged(S,c,'pc1','192.168.1.130',p=>p.ok&&p.smask==='255.255.255.192'&&p.sip!=='192.168.1.100')}],
+ after:`<p>.100 と .130 は、見た目は同じ「192.168.1.」でも、<b>/26 では別のネットワーク</b>です。ゲートウェイがない（ルータを通れない）ので、届きませんでした。</p><p>つまり、<b>「3つ目の数字までが同じ」では判断できない</b>のが、サブネットマスクの大事なところです。<b>必ずマスクと一緒に見る</b>、がルールです。</p>`,
+ hints:[`ping は PC①のタブの「ターミナル」で <code>ping 192.168.1.130</code> と入力します。`,
+  `次はPC①の設定画面を開き、「IPアドレス」を 192.168.1.150（サーバと同じ 128〜191 のかたまり）に変えて「適用」。マスクは 255.255.255.192 のままです。`]},
+
+{title:'設計図を作る：部署ごとに切り分ける',focus:{dev:'server',view:'calc'},
+ why:`<p>ここからは、ネットワーク担当者の仕事です。次の依頼が来ました。</p><div class="tbox"><b>📋 依頼：新オフィスのIPアドレス計画</b><br>会社全体で <b>192.168.1.0/24</b> を使います。次の4つのネットワークに、できるだけ無駄なく分けてください。各ネットワークでは<b>ルータ（ゲートウェイ）用に1アドレス</b>が必要です。<table class="sheet"><tr><th>ネットワーク</th><th>PC・機器の台数</th></tr><tr><td>経理部</td><td>51台</td></tr><tr><td>営業部</td><td>21台</td></tr><tr><td>サーバ室</td><td>11台</td></tr><tr><td>管理（スイッチ・プリンタ等）</td><td>4台</td></tr></table></div><p><b>実務の設計手順</b>：</p><ol><li>各ネットワークの<b>必要アドレス数</b>＝ 台数 ＋ ゲートウェイ1 ＋ 将来の余裕</li><li>それが入る<b>いちばん小さなマスク</b>を選ぶ</li><li><b>大きいネットワークから順に</b>、アドレスの小さい方から<b>隙間なく並べる</b>（これを VLSM と呼びます）</li><li>結果を<b>IPアドレス管理表</b>にまとめる</li></ol><p>なぜ大きい順？ ブロックは「自分の大きさの倍数」の位置からしか始められないため、大きいものから置くと無駄が出ません。</p>`,
+ quiz:{title:'必要なマスクを選び、アドレスを割り当てよう',items:[
+  {id:'a',q:'経理部（51台＋ゲートウェイ1＝52個）に必要なマスクは？（/○）',type:'prefix',answer:26,ph:'例：/26',hint:'52個が入る最小のブロックは？ 2の5乗＝32 では足りない。2の6乗＝64 なら足ります。',exp:'/26（アドレス64個、使える62台）。経理部は 192.168.1.<b>0</b>/26（.0〜.63）に置きます。'},
+  {id:'b',q:'営業部（21台＋1＝22個）に必要なマスクは？（/○）',type:'prefix',answer:27,ph:'例：/27',hint:'2の4乗＝16 では足りません。2の5乗＝32 なら足ります。',exp:'/27（アドレス32個、使える30台）。'},
+  {id:'c',q:'営業部は、経理部（.0〜.63）の次から並べます。営業部の<b>ネットワークアドレス</b>は？（192.168.1.○）',type:'num',answer:64,ph:'最後の数字',hint:'経理部の最後は .63。その次の数字から始まります。32個ずつのブロックの位置にもなっていますか？',exp:'192.168.1.<b>64</b>/27（.64〜.95）。'},
+  {id:'d',q:'サーバ室（11台＋1＝12個）に必要なマスクは？（/○）',type:'prefix',answer:28,ph:'例：/28',hint:'12個が入る最小のブロックは 16個（2の4乗）です。',exp:'/28（アドレス16個、使える14台）。'},
+  {id:'e',q:'サーバ室は営業部（.64〜.95）の次です。サーバ室の<b>ネットワークアドレス</b>は？（192.168.1.○）',type:'num',answer:96,ph:'最後の数字',hint:'営業部の最後は .95 です。',exp:'192.168.1.<b>96</b>/28（.96〜.111）。'},
+  {id:'f',q:'管理（4台＋1＝5個）に必要なマスクは？（/○）',type:'prefix',answer:29,ph:'例：/29',hint:'8個（2の3乗）あれば足ります。',exp:'/29（アドレス8個、使える6台）。/30 だと使える台数は2台しかなく足りません。'},
+  {id:'g',q:'管理は サーバ室（.96〜.111）の次です。管理の<b>ネットワークアドレス</b>は？（192.168.1.○）',type:'num',answer:112,ph:'最後の数字',hint:'サーバ室の最後は .111 です。',exp:'192.168.1.<b>112</b>/29（.112〜.119）。'}
+ ]},
+ todo:`<p>7問すべてに答えて「答え合わせ」を押してください。答えは次の<b>IPアドレス管理表</b>になります。</p>`,
+ subs:[],
+ after:`<table class="sheet"><tr><th>ネットワーク</th><th>ネットワークアドレス</th><th>使える範囲</th><th>ゲートウェイ</th></tr><tr><td>経理部</td><td class="m">192.168.1.0/26</td><td class="m">.1〜.62</td><td class="m">.1</td></tr><tr><td>営業部</td><td class="m">192.168.1.64/27</td><td class="m">.65〜.94</td><td class="m">.65</td></tr><tr><td>サーバ室</td><td class="m">192.168.1.96/28</td><td class="m">.97〜.110</td><td class="m">.97</td></tr><tr><td>管理</td><td class="m">192.168.1.112/29</td><td class="m">.113〜.118</td><td class="m">.113</td></tr></table><p>残り（.120〜.255）は<b>将来のために空けて</b>あります。これが<b>IPアドレス管理表</b>のもとになる設計図です。実務では、これを表計算ソフトで管理し、<b>重ならないように</b>厳密に記録します（重なったネットワークは通信が混乱します）。</p><p><b>実務の決まりごと</b>：ゲートウェイ（ルータ）には、慣習としてそのネットワークの<b>先頭の使えるアドレス（.1 や .65 など）</b>を割り当てます。</p>`},
+
+{title:'設定する①：ルータとサーバを新しいネットワークへ',focus:{dev:'router',view:'cfg'},
+ enter:S=>{applyBase(S,6);},
+ why:`<p>設計図ができたので、実際の機器に設定します。いまの機器は<b>古い設計</b>（192.168.1.0/24 と 192.168.2.0/24）のままです。設計図のうち<b>経理部</b>と<b>営業部</b>の2つを作ります。3ステップに分けて進めます。</p><div class="tbox"><b>📋 設計図（前のステップで作った管理表）</b><table class="sheet"><tr><th>ネットワーク</th><th>ネットワークアドレス</th><th>マスク</th><th>ゲートウェイ（ルータ）</th></tr><tr><td>経理部（LAN1：サーバ・PC①）</td><td class="m">192.168.1.0</td><td class="m">255.255.255.192（/26）</td><td class="m">192.168.1.1</td></tr><tr><td>営業部（LAN2：PC②）</td><td class="m">192.168.1.64</td><td class="m">255.255.255.224（/27）</td><td class="m">192.168.1.65</td></tr></table></div><p><b>このステップの作業</b>：ルータの2つのポートと、サーバを、新しい設計に合わせます。ルータの各ポートは<b>それぞれのネットワークのゲートウェイ</b>になるので、設計図の「ゲートウェイ」のアドレスを入れます。</p>`,
+ todo:`<table class="sheet"><tr><th>機器</th><th>設定内容</th></tr><tr><td>ルータ ポート1（経理部側）</td><td class="m">192.168.1.1 ／ 255.255.255.192</td></tr><tr><td>ルータ ポート2（営業部側）</td><td class="m">192.168.1.65 ／ 255.255.255.224</td></tr><tr><td>サーバ</td><td class="m">192.168.1.10 ／ 255.255.255.192、ゲートウェイ 192.168.1.1</td></tr></table><p>ルータの設定画面（ポート1・ポート2）と、サーバの設定画面で入力して「適用」。</p>`,
+ subs:[{t:'ルータ ポート1 を 192.168.1.1 ／ 255.255.255.192 にした',f:S=>subCfgOk(S).r1},
+       {t:'ルータ ポート2 を 192.168.1.65 ／ 255.255.255.224 にした',f:S=>subCfgOk(S).r2},
+       {t:'サーバを 192.168.1.10 ／ 255.255.255.192（ゲートウェイ 192.168.1.1）にした',f:S=>subCfgOk(S).sv}],
+ hints:[`ルータの設定画面には、ポート1とポート2の入力欄があります。マスクの入力を忘れずに（/26 は 255.255.255.192、/27 は 255.255.255.224）。`,
+  `適用時にエラーが出たら、メッセージを読みましょう（ネットワークアドレスの指定、ゲートウェイが別ネットワーク、ポートの重複などを検出します）。`,
+  `設定を間違えて分からなくなったら、画面下の「🔍 このステップで変更した設定」で確認し、「↺ このステップの開始状態に戻す」でやり直せます。`],
+ after:`<p>ルータが2つの新しいネットワークの出入口になり、サーバは経理部ネットワークに移りました。<b>ルータのポートは、ネットワークごとに別のサブネット</b>に置きます（同じサブネットに2つ置くと、どちらへ送ればよいか決まりません）。</p>`},
+
+{title:'設定する②：DHCPを新しいネットワークに合わせる',focus:{dev:'server',view:'cfg'},
+ why:`<p>経理部のPC①は、DHCPで自動設定を受け取ります。前のステップでサーバが新しいネットワークに移ったので、<b>DHCPの設定も合わせ直す</b>必要があります。PC①は、まだ<b>古い設定（.100 など）を持ったまま</b>です。</p><p><b>DHCPの設定の決め方（実務）</b>：</p><ul><li>範囲は<b>経理部のネットワークの内側</b>（使えるのは .1〜.62）</li><li>ルータ（.1）やサーバ（.10）など、<b>固定で使うアドレスを避ける</b>（重なると競合します）</li><li>PCが増えても足りるよう、<b>10個以上</b>は確保する</li><li><b>配るサブネットマスク</b>は、このネットワークのマスク（255.255.255.192）に合わせる</li><li>配るゲートウェイは .1（ルータ）、配るDNSは .10（サーバ）</li></ul><p>ネットワークアドレス・ブロードキャスト・固定IPを範囲に含めたり、サブネットの外を指定したりすると、適用時にエラーになります。</p>`,
+ todo:`<p>サーバの設定画面の「DHCPサービス」を、たとえば <b>開始 192.168.1.20 ／ 終了 192.168.1.60 ／ 配るマスク 255.255.255.192 ／ ゲートウェイ 192.168.1.1 ／ DNS 192.168.1.10</b> にして「適用」。そのあと PC①のターミナルで <code>ipconfig /renew</code> を実行し、<code>ipconfig</code> で<b>もらった設定</b>を確認します。</p>`,
+ subs:[{t:'DHCPを「範囲：サブネット内・.1 と .10 を避ける・10個以上、配るマスク 255.255.255.192、ゲートウェイ .1、DNS .10」で設定した',f:S=>subCfgOk(S).dh},
+       {t:'PC①が DHCP で（新しい範囲・/26 の設定で）アドレスを取得した',f:S=>subCfgOk(S).p1}],
+ hints:[`配るマスクの欄が 255.255.255.0 のままだと、PC①に /24 が配られてしまいます。255.255.255.192 に直しましょう。`,
+  `PC①は、設定したあとで PC①のターミナルから <code>ipconfig /renew</code> を実行しないと、古い設定のままです。`,
+  `範囲の例：開始 192.168.1.20、終了 192.168.1.60。（.1 と .10 を含まず、.62 以下）`],
+ after:`<p>PC①は、新しい範囲のアドレスと <b>/26 のマスク</b>を受け取りました。DHCPで配る内容（範囲・マスク・ゲートウェイ・DNS）は、<b>ネットワークの設計と一致している</b>必要があります。設計を変えたら、DHCPの設定とPC側の取り直し（<code>ipconfig /renew</code>）を忘れずに。</p>`},
+
+{title:'設定する③：PC②を設定して、疎通を確認する',focus:{dev:'pc2',view:'cfg'},
+ why:`<p>最後に営業部のPC②です。PC②は固定IPで設定します。営業部のネットワークは <b>192.168.1.64/27（255.255.255.224）</b>、ゲートウェイは <b>192.168.1.65</b>（ルータのポート2）です。</p><p>設定できたら、<b>経理部（PC①）と営業部（PC②）が、ルータ越しにつながるか</b>を確認します。</p>`,
+ todo:`<p>PC②の設定画面を <b>192.168.1.66 ／ 255.255.255.224、ゲートウェイ 192.168.1.65、DNS 192.168.1.10</b> にして適用。そのあと、<br>① PC①のターミナルで <code>ping 192.168.1.66</code><br>② PC②のブラウザで <code>http://www.toyosho.example</code> を開く</p>`,
+ subs:[{t:'PC②を 192.168.1.66 ／ 255.255.255.224、ゲートウェイ .65、DNS .10 にした',f:S=>subCfgOk(S).p2},
+       {t:'PC①から PC②（192.168.1.66）への ping が届いた',f:(S,c)=>pinged(S,c,'pc1','192.168.1.66',p=>p.ok)},
+       {t:'PC②のブラウザで http://www.toyosho.example が表示された',f:(S,c)=>webd(S,c,'pc2',p=>p.kind==='ok'&&p.host==='www.toyosho.example')}],
+ hints:[`ping が届かないときは、PC①の <code>ipconfig</code> で自分のマスクとゲートウェイを確認。ゲートウェイは 192.168.1.1 になっていますか？`,
+  `PC②のゲートウェイは、PC②と同じネットワークにいるルータのアドレス（ポート2の 192.168.1.65）です。`],
+ after:`<p>2つの小さなネットワークが、ルータでつながりました。<b>1つのアドレス空間（192.168.1.0/24）を、台数に合わせて分けて使う</b>。実際の会社の設計と同じ考え方です。</p>`},
+
+{title:'障害対応：マスクの設定ミス',focus:{dev:'pc2',view:'term'},challenge:true,
+ enter:S=>{applyBase(S,6);const d=S.dev;
+   Object.assign(d.router.if1,{ip:'192.168.1.1',mask:'255.255.255.192'});Object.assign(d.router.if2,{ip:'192.168.1.65',mask:'255.255.255.224'});
+   Object.assign(d.server,{ip:'192.168.1.10',mask:'255.255.255.192',gw:'192.168.1.1'});
+   Object.assign(d.server.dhcp,{on:true,start:'192.168.1.20',end:'192.168.1.60',mask:'255.255.255.192',gw:'192.168.1.1',dns:'192.168.1.10'});
+   Object.assign(d.pc2,{mode:'manual',ip:'192.168.1.66',mask:'255.255.255.0',gw:'192.168.1.65',dns:'192.168.1.10'});
+   d.pc1.mode='dhcp';renew(S,'pc1');},
+ why:`<p><b>復習：</b>機器は荷物を送る前に、「宛先は自分と同じネットワークか」を<b>自分のIPアドレスとマスク</b>で判定します。同じなら直接送り、違うならゲートウェイ（出口）に渡します。ping の表示は次のように読みました。</p><table class="sheet"><tr><th>表示</th><th>意味</th><th>まず疑う場所</th></tr><tr><td class="m">General failure</td><td>送り出せない</td><td>自分の設定（IP・マスク・ゲートウェイ）</td></tr><tr><td class="m">宛先ホストに到達できません</td><td>同じネットワークのはずなのに、その相手がいない</td><td>相手側の設定、または<b>自分のマスク</b>（同じネットワークだと誤解していないか）</td></tr><tr><td class="m">要求がタイムアウトしました</td><td>返事が来ない</td><td>途中の経路・返事の帰り道</td></tr></table><p>障害対応の基本は、<b>設計図と、実際の設定を1項目ずつ見比べる</b>ことです。</p>`,
+ todo:`<p>🔥 報告：「営業のPC②から、社内サイト <b>http://www.toyosho.example</b> が開きません。IPアドレスもゲートウェイも、設計図どおりのはずなのですが…」原因を見つけて、<b>PC②のブラウザで表示される</b>ようにしてください。</p><p>📒 <b>設計図</b>：営業部 192.168.1.64/27（マスク 255.255.255.224）、PC② ＝ 192.168.1.66、ゲートウェイ ＝ 192.168.1.65、DNS ＝ 192.168.1.10　／　経理部 192.168.1.0/26、サーバ ＝ 192.168.1.10</p>`,
+ subs:[{t:'PC②のマスクを正しくし、http://www.toyosho.example が表示された',f:(S,c)=>same(S.dev.pc2.mask,'255.255.255.224')&&webd(S,c,'pc2',p=>p.kind==='ok'&&p.host==='www.toyosho.example')}],
+ hints:[`まず PC②の <code>ipconfig</code> を見て、設計図と1項目ずつ見比べよう。IPアドレス、マスク、ゲートウェイ、DNS…。`,
+  `ゲートウェイ（192.168.1.65）に ping してみよう。届くのに、サーバへの ping は「宛先ホストに到達できません」になる。これは何を意味する？`,
+  `PC②のマスクが 255.255.255.0（/24）になっています。/24 だと、PC②は「192.168.1.1〜254 は全部、自分と同じネットワークにいる」と思い込み、ルータを通さずに直接送ろうとします。`,
+  `【答え】PC②のマスクを 255.255.255.224（/27）に直します。`],
+ after:`<p>原因は、<b>マスクが広すぎた</b>ことでした。</p><ul><li>PC②は /24 だと思っていたので、サーバ（192.168.1.10）を<b>「同じネットワーク内」</b>と判断</li><li>ルータ（ゲートウェイ）を通さず、直接さがしたが見つからず、<b>「宛先ホストに到達できません」</b></li></ul><p>実務でよくある障害です。<b>IPアドレスとゲートウェイが合っていても、マスクが違うと通信できない</b>。切り分けの順番に<b>「マスクの確認」</b>を必ず入れましょう。</p><table class="sheet"><tr><th>マスクの間違い</th><th>症状</th></tr><tr><td>広すぎる（/24 のはずが /8 など）</td><td>外の機器まで「同じネットワーク」と誤解し、ゲートウェイを通さない → 宛先ホストに到達できません</td></tr><tr><td>狭すぎる（/27 のはずが /30 など）</td><td>同じネットワークの機器まで「別のネットワーク」と誤解 → ゲートウェイが無ければ General failure</td></tr></table>`},
+
+{title:'まとめ：実機演習に向けて',focus:null,
+ why:`<p>サブネットの考え方は、実機のWindowsでも、会社のネットワークでも、全く同じです。次の<b>3つの質問</b>に自分で答えられれば合格です。</p><table class="sheet"><tr><th>質問</th><th>考え方</th></tr><tr><td>① このネットワークで使える台数は？</td><td>32 − 数字 ＝ ホスト部 → 2<sup>ホスト部</sup> − 2</td></tr><tr><td>② この2台は同じネットワーク？</td><td>256 − マスク ＝ ブロックの大きさ → 同じかたまりに入っているか</td></tr><tr><td>③ ネットワーク／ブロードキャストは？</td><td>かたまりの先頭と最後</td></tr></table><p><b>実務の鉄則</b>：</p><ul><li>必要台数 ＋ ゲートウェイ ＋ 余裕 でマスクを選ぶ</li><li>大きいネットワークから順に、重ならないように割り当てる</li><li>DHCP範囲はサブネット内・固定IPを避ける</li><li>IPアドレスだけでなく<b>マスクもセットで確認</b>する</li></ul>`,
+ todo:`<p>「ミッション7を完了する」を押すと、実機演習で試すカードが表示されます。</p>`,
+ subs:[]}
+];
+
+// ======== ミッション8：卒業チャレンジ ========
+const T8=[
+{title:'卒業チャレンジ',focus:null,
+ why:`<p>ここまでで、IPアドレス・ping・ipconfig・ゲートウェイ・DHCP・DNS・nslookup・tracert・ブラウザ／curl・ポート番号を使ってきました。最後は<b>卒業チャレンジ</b>です。ネットワークは、ミッション6までと同じ構成（192.168.1.0/24 と 192.168.2.0/24）に戻してあります。</p><p>次のステップには、<b>手順の説明はありません</b>。報告された症状だけを頼りに、自分で原因を見つけて直してください。切り分けの基本はこの順番です。</p><ol><li><b>症状を確かめる</b>（ブラウザやpingの表示を読む）</li><li><b>近いところから順に</b>：自分（IP・マスク・ゲートウェイ）→ ゲートウェイ → 相手のIP → 名前 → 窓口（ポート・サービス）</li><li>表示の意味から<b>疑う場所を絞る</b>（自分側か、相手側か、途中か）</li><li>直したら<b>同じ確認でもう一度</b>試す</li></ol>`,
+ todo:`<p>準備ができたら「次のステップへ」。ヒントは6段階あります（最後のヒントは答えです）。</p>`,
+ subs:[]},
+
+{title:'卒業チャレンジ：社内サイトが開けない',focus:{dev:'pc2',view:'web'},challenge:true,
+ enter:S=>{S.dev.pc2.gw='192.168.2.2';S.dev.pc2.dns='192.168.1.1';
+   const r=recOf(S,'www.toyosho.example');if(r)r.ip='192.168.1.13';
+   const w=S.dev.server.web;w.http=true;w.httpPort='8080';w.https=true;w.httpsPort='443';},
+ todo:`<p>🔥 報告：「営業のPC②から、社内サイト <b>http://www.toyosho.example</b> が開けません」。ほかの機器は触っていないそうです。原因を見つけて、<b>PC②のブラウザで表示される</b>ようにしてください。（原因は1つとは限りません）</p>`,
+ subs:[{t:'PC②から http://www.toyosho.example（ポート指定なし）で表示された',f:(S,c)=>webd(S,c,'pc2',p=>p.kind==='ok'&&p.scheme==='http'&&p.host==='www.toyosho.example'&&p.port===80)}],
+ hints:[`まず PC②のブラウザで <code>http://www.toyosho.example</code> を開いて、エラーの表示を読もう。次に「近いところから順に」確認します。`,
+  `PC②の <code>ipconfig</code> を見て、ゲートウェイは自分と同じ町のルータのアドレスになっていますか？ ゲートウェイに <code>ping</code> は届きますか？`,
+  `ゲートウェイを直したら、名前の確認。<code>nslookup www.toyosho.example</code> の結果は？ PC②のDNSサーバーのアドレスは正しい？（DNSサービスを動かしているのはどの機器？）`,
+  `名前が引けたら、<code>nslookup</code> が返したIPアドレスに直接 <code>ping</code>。届かないなら、そのIPアドレスが本当にサーバのIPアドレスか、サーバの <code>ipconfig</code> と見比べよう。`,
+  `名前もIPアドレスも直ったのに、ブラウザが「接続が拒否されました」になる場合は、窓口（ポート）の問題です。サーバの設定画面で、HTTPサービスのポート番号を確認しよう。`,
+  `【答え】原因は4つ：①PC②のゲートウェイ（正：192.168.2.1）②PC②のDNSサーバー（正：192.168.1.10）③サーバのDNSレコードのIP（正：192.168.1.10）④サーバのHTTPポート番号（正：80）`],
+ after:`<p>原因は <b>4つ</b>でした。</p><ul><li>PC②のゲートウェイ（192.168.2.<b>2</b>）が間違い → 出口に届かず、名前の問い合わせも出せなかった</li><li>PC②のDNSサーバー（192.168.1.<b>1</b>）が間違い → ルータはDNSサーバではないので応答しない</li><li>DNSレコードのIP（192.168.1.<b>13</b>）が間違い → 名前は解決できても、違う場所に届く</li><li>サーバのHTTPポート（<b>8080</b>）が間違い → ポート省略のURLが使う80番の窓口は閉じている</li></ul><p>手前の問題を直すと、次の問題が見えてきます。<b>近いところから一つずつ</b>確認していけば、複数の原因があっても解決できます。</p>`},
+
+{title:'卒業：実機演習に向けて',focus:null,
+ why:`<p>お疲れさまでした。このミッションをすべて終えて、<b>小さな社内LAN</b>について、次のことができるようになりました。</p><ul class="chk"><li>✅ IPアドレス・サブネットマスク・ゲートウェイ・DNSの設定を確認できる</li><li>✅ 同じネットワークか、別のネットワークかを判断できる</li><li>✅ ping の結果から、調べる場所（自分・相手・途中）を絞り込める</li><li>✅ DHCP・DNS・Webサービスの役割を説明できる</li><li>✅ 複数の原因がある障害を、近い場所から順番に切り分けられる</li><li>✅ 必要台数から、サブネットを設計できる</li></ul><p>ここまでの内容は、実機のWindowsでも<b>同じコマンド・同じ考え方</b>で使えます。</p><table class="sheet"><tr><th>やりたいこと</th><th>コマンド・操作</th></tr><tr><td>自分の設定を見る</td><td class="m">ipconfig / ipconfig /all</td></tr><tr><td>自分の通信機能の確認</td><td class="m">ping 127.0.0.1</td></tr><tr><td>相手・ゲートウェイへの到達確認</td><td class="m">ping 相手のIP</td></tr><tr><td>DHCPの再取得</td><td class="m">ipconfig /release → /renew</td></tr><tr><td>名前→IPの確認</td><td class="m">nslookup 名前</td></tr><tr><td>通った経路の確認</td><td class="m">tracert 宛先</td></tr><tr><td>Webの応答の確認</td><td class="m">curl -i URL（またはブラウザ）</td></tr><tr><td>窓口（ポート）が開いているかの確認</td><td class="m">Test-NetConnection 宛先 -Port 443（PowerShell）</td></tr></table>`,
+ todo:`<p>「卒業する」を押すと、実機演習で試すカードが表示されます。</p>`,
+ subs:[]}
+];
+
+const MISSIONS=[
+{title:'チュートリアル：IPアドレス・ipconfig・ping',tutorial:T1,
+ real:['自分のPCで <code>ipconfig</code> を実行して、<b>IPv4アドレス・サブネットマスク・デフォルトゲートウェイ</b>を探そう。','<code>ping 127.0.0.1</code> を実行して、返事が返ってくるか確かめよう。','隣の席の人とIPアドレスを比べて、IPアドレスとサブネットマスクを見比べて、ネットワーク部が同じか確かめよう。（マスクが 255.255.255.0 の場合は、3つ目までがネットワーク部、最後の数字がホスト部です。マスクとセットで見ること）']},
+{title:'障害対応①：つながらない！ 原因の切り分け',tutorial:T2,
+ setup:S=>{Object.assign(S.dev.pc1,{mode:'manual',ip:'192.168.10.11',mask:M24,gw:'',dns:'',lease:null});},
+ real:['実機で <code>ping 127.0.0.1</code> → <code>ipconfig</code> → ゲートウェイへ <code>ping</code> → 外のIPへ <code>ping</code> の順に実行し、どこまで届くか記録しよう。','「宛先ホストに到達できません」と出ても統計は「受信 = 4」になることがあります。<b>応答の中身まで</b>読もう。']},
+{title:'ネットワークをつなぐ：ルータとデフォルトゲートウェイ',tutorial:T3,
+ real:['<code>ipconfig</code> でデフォルトゲートウェイを確認し、そのアドレスに <code>ping</code> を打ってみよう。','<code>tracert 8.8.8.8</code> を実行し、1つ目の中継点がゲートウェイと同じか確かめよう（学校のネットワークでは制限される場合があります）。','<code>ping</code> の TTL の値を読んで、ルータを何台越えたか考えてみよう。']},
+{title:'設定を自動化：DHCP',tutorial:T4,
+ real:['<code>ipconfig /all</code> で「DHCP 有効」と「DHCP サーバー」を確認しよう。','先生の許可があれば <code>ipconfig /release</code> → <code>ipconfig /renew</code> を試して、アドレスが変わるか観察しよう。','<b>169.254.x.x</b> と表示されたら「DHCPからアドレスをもらえていない」サイン。']},
+{title:'名前でつなぐ：DNS',tutorial:T5,
+ setup:S=>{S.dev.server.dnsSvc={on:false,records:[]};S.dev.pc2.dns='';},
+ real:['<code>nslookup www.google.com</code> でIPアドレスを調べ、そのIPアドレスに直接 <code>ping</code> してみよう。','<code>ipconfig /all</code> で、自分のPCが使っているDNSサーバーのアドレスを確認しよう。','名前でつながらないときは「IPアドレスなら？」と切り分けよう。']},
+{title:'Webにつなぐ：HTTP/HTTPSとポート番号',tutorial:T6,
+ setup:S=>{S.dev.server.web={http:false,httpPort:'80',https:false,httpsPort:'443'};},
+ real:['ブラウザで https:// のサイトを開き、アドレスバーの鍵マークから証明書の「発行先」を見てみよう。','<code>curl -I https://www.example.com</code> で、応答ヘッダ（先頭のステータス行）を確認しよう。（-I は応答ヘッダだけを表示）','PowerShell で <code>Test-NetConnection www.example.com -Port 443</code> を実行して、窓口（ポート）が開いているか確かめよう。','存在しないページ（例：サイトのURLの後ろに /abc を付ける）を開いて、404の表示を見てみよう。']},
+{title:'ネットワーク設計：サブネットとアドレス計画',tutorial:T7,
+ real:['自分のPCで <code>ipconfig</code> を実行し、<b>サブネットマスク</b>を /○ の形に直そう（255.255.255.0 → /24）。','隣の席の人と IPアドレスとマスクを見せ合い、<b>同じネットワークか</b>を計算で判定しよう（ping も打ってみよう）。','自分のネットワークの<b>ネットワークアドレス・ブロードキャスト・使える台数</b>を計算し、計算機アプリや先生の答えで確かめよう。','【実務の練習】クラスを班に分け、「A班12台・B班25台・C班5台」を 192.168.10.0/24 から割り当てる<b>IPアドレス管理表</b>を作ろう。']},
+{title:'卒業チャレンジ（手順なし・自力で解決）',tutorial:T8,
+ setup:S=>{applyBase(S,6);},
+ real:['【自分で手順を作ろう】つながらないときの確認順を、自分の言葉で6行にまとめてみよう（自分 → ゲートウェイ → 外のIP → 名前 → 窓口（ポート）→ ページ）。','実機演習で、先生の指示のもと、隣の人のPCと <code>ping</code> を打ち合ってみよう。']}
+];
+
+// ===ENGINE END
+
+// ===================== 画面 =====================
+const KEY='netdojo_trial_v7';
+let S=load();
+const ui={dev:'pc1',view:'cfg',msg:null};
+const TERM={router:[],server:[],pc1:[],pc2:[]};
+const BUSY={};
+const HIST_IDX={};
+const PROMPT={router:'Router#',server:'C:\\Users\\Administrator>',pc1:'C:\\Users\\user>',pc2:'C:\\Users\\user>'};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function load(){
+  try{const j=localStorage.getItem(KEY);if(j){const o=JSON.parse(j);const f=freshState();
+    return Object.assign(f,o,{dev:Object.assign(f.dev,o.dev),hist:Object.assign(f.hist,o.hist)});}}catch(e){}
+  return freshState();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600);}
+
+function afterChange(){save();renderDiagram();renderMission();renderTabs();renderHeader();}
+const TESTAVAIL=/[?&]test=1(&|$)/.test(location.search);
+function testOn(){if(!TESTAVAIL)return false;try{return localStorage.getItem('netdojo_testmode')==='1';}catch(e){return false;}}
+function openNotes(){
+  const el=$('notes');
+  let h='<div class="np"><div class="nh"><h3 style="margin:0">📖 学習ノート（これまで学んだことの見返し）</h3><button class="btn" onclick="closeNotes()">閉じる ✕</button></div><p class="note">進行はそのままで、学習済みのステップの解説・答えを読み返せます。機器の設定は変わりません。</p>';
+  MISSIONS.forEach((m,k)=>{
+    const t=tstate(S,k),n=m.tutorial.length,cl=!!S.cleared[k];
+    const reached=cl?n:Math.min(t.step+(t.started?1:0),n);
+    const stat=cl?'<span class="st-ok">✓ 達成</span>':(t.started?'<span class="st-ing">進行中</span>':'<span class="st-no">未着手</span>');
+    h+='<details'+(S.mission===k?' open':'')+'><summary>ミッション'+(k+1)+'：'+esc(m.title)+'　'+stat+'</summary>';
+    if(!t.started&&!cl)h+='<div class="nb st-no">まだ始めていません。</div>';
+    for(let i=0;i<reached;i++){
+      const st=m.tutorial[i],fin=cl||i<t.step;
+      h+='<details><summary>'+(i+1)+'. '+esc(st.title)+(fin?'':'　<span class="st-ing">（取り組み中）</span>')+'</summary><div class="nb">';
+      if(st.why)h+='<div>'+st.why+'</div>';
+      if(fin){
+        if(st.predict)h+='<div class="ans"><b>🔮 予想問題</b><br>'+st.predict.q+'<br>正解：<b>'+esc(st.predict.opts[st.predict.correct])+'</b><br>'+st.predict.why+'</div>';
+        if(st.quiz)h+='<div class="ans"><b>✏️ 計算問題</b>'+st.quiz.items.map(it=>'<div style="margin-top:4px">'+it.q+'<br>→ '+(it.exp||'')+'</div>').join('')+'</div>';
+        if(st.after)h+='<div class="ans"><b>✅ 答え合わせ</b>'+st.after+'</div>';
+      }
+      h+='</div></details>';
+    }
+    h+='</details>';
+  });
+  el.innerHTML=h+'</div>';el.classList.add('show');
+}
+function closeNotes(){$('notes').classList.remove('show');}
+function toggleTest(){try{localStorage.setItem('netdojo_testmode',testOn()?'0':'1');}catch(e){}renderHeader();renderMission();}
+function renderHeader(){$('hintcnt').textContent='ヒント使用：'+S.hintsUsed+'回';const b=$('testbtn');if(b){b.style.display=TESTAVAIL?'':'none';b.textContent=testOn()?'🧪 テストモード：ON':'🧪 テストモード';b.style.background=testOn()?'#fde68a':'';}}
+function renderMission(){
+  const i=S.mission,m=MISSIONS[i];
+  let h='<div class="dots"><span class="lab">ミッション</span>';
+  MISSIONS.forEach((_,k)=>{h+='<button class="dot '+(S.cleared[k]?'done ':'')+(k===i?'cur':'')+'" onclick="gotoMission('+k+')" title="'+esc(MISSIONS[k].title)+'">'+(S.cleared[k]?'✓':(k+1))+'</button>';});
+  h+='</div><h2>'+(i+1)+'. '+esc(m.title)+'</h2>'+renderTutorial(m,i);
+  $('mission').innerHTML=h;
+}
+function gotoMission(k){
+  const fresh=beginMission(S,k);S.mission=k;
+  if(fresh){Object.keys(TERM).forEach(x=>TERM[x]=[]);clearBrowsers();}
+  save();ui.msg=null;applyFocus();renderAll();
+}
+function applyFocus(){
+  const m=MISSIONS[S.mission],t=tstate(S,S.mission);
+  if(t.step<m.tutorial.length){const f=m.tutorial[t.step].focus;if(f){ui.dev=f.dev;ui.view=f.view;}}
+}
+function renderTutorial(m,i){
+  const T=m.tutorial,t=tstate(S,i),n=T.length,last=i===MISSIONS.length-1;
+  if(t.step>=n){
+    return '<div class="clear"><h4>'+(last?'🎓 卒業チャレンジ達成！':'🎉 ミッション'+(i+1)+' 達成！')+'</h4><div class="real"><b>📌 実機でやってみよう</b><ul style="margin:4px 0 0 18px;padding:0">'+m.real.map(x=>'<li>'+x+'</li>').join('')+'</ul></div>'+
+      (last?'':'<button class="btn" onclick="gotoMission('+(i+1)+')">次のミッションへ →</button> ')+'<button class="btn ghost" onclick="tutRestart('+i+')">もう一度見直す</button></div>';
+  }
+  const st=T[t.step],done=stepDone(S,i,t.step),pk=t.pred[t.step],c=ctxFor(S,i,t.step);
+  let h='<div class="tprog">ステップ '+(t.step+1)+' / '+n+'</div><div class="bar"><i style="width:'+Math.round(t.step/n*100)+'%"></i></div>';
+  h+='<h3 class="stt">'+esc(st.title)+'</h3>';
+  if(st.why)h+='<div class="tbox why"><b>🧠 しくみ</b>'+st.why+'</div>';
+  if(st.predict){
+    h+='<div class="tbox pred"><b>'+(st.predict.label||'🔮 実行する前に予想しよう')+'</b><div>'+st.predict.q+'</div>';
+    st.predict.opts.forEach((o,k)=>{
+      let cls='opt';
+      if(done){if(k===st.predict.correct)cls+=' right';else if(k===pk)cls+=' wrong';}
+      else if(k===pk)cls+=' sel';
+      h+='<button class="'+cls+'" '+(done?'disabled':'onclick="tutPick('+i+','+t.step+','+k+')"')+'>'+(k===pk?'● ':'○ ')+esc(o)+'</button>';
+    });
+    h+='</div>';
+  }
+  if(st.quiz)h+=quizHtml(i,t.step,st);
+  if(st.challenge)h+='<div class="tbox chal"><b>🔥 自力チャレンジ</b>'+st.todo+'</div>';
+  else h+='<div class="tbox do"><b>🎯 やってみよう</b>'+st.todo+'</div>';
+  const subs=[];
+  if(st.predict)subs.push({t:'予想を選んだ',ok:pk!=null});
+  if(st.quiz)subs.push({t:'計算問題にすべて正解した',ok:quizAllOk(S,i,t.step)});
+  st.subs.forEach(x=>subs.push({t:x.t,ok:x.f(S,c)}));
+  if(subs.length)h+='<ul class="goals">'+subs.map(x=>'<li class="'+(x.ok?'ok':'')+'"><span class="mk">'+(x.ok?'✓':'')+'</span><span>'+x.t+'</span></li>').join('')+'</ul>';
+  if(st.subs.length)h+=diffHtml(i,t.step);
+  if(done){
+    h+='<div class="tbox ans"><b>✅ 答え合わせ</b>';
+    if(st.predict)h+='<p>'+(pk===st.predict.correct?'予想どおり！ ':'予想と違いました。 ')+st.predict.why+'</p>';
+    if(st.after)h+=st.after;
+    h+='</div>';
+  }else{
+    const hs=st.hints||(st.hint?[st.hint]:[]),hc=t.hint[t.step]||0;
+    for(let k=0;k<hc&&k<hs.length;k++)h+='<div class="hintbox"><b>ヒント'+(hs.length>1?(k+1):'')+'：</b>'+hs[k]+'</div>';
+    if(hc<hs.length)h+='<button class="btn ghost" onclick="tutHint('+i+','+t.step+')">'+(hc?'次のヒントを見る':'詰まったらヒント')+(hs.length>1?'（'+hc+'/'+hs.length+'）':'')+'</button>';
+  }
+  h+='<div class="tnav">'+(t.step>0?'<button class="btn ghost" onclick="tutBack('+i+')">← 前へ</button>':'')+'<button class="btn" '+(done||testOn()?'':'disabled')+' onclick="tutNext('+i+')">'+(t.step===n-1?(last?'卒業する':'ミッション'+(i+1)+'を完了する'):'次のステップへ →')+(!done&&testOn()?'（スキップ）':'')+'</button></div>';
+  return h;
+}
+const DEVLBL={router:'ルータ',server:'サーバ',pc1:'PC①',pc2:'PC②'};
+const FLDLBL={'if1.ip':'ポート1 IPアドレス','if1.mask':'ポート1 マスク','if2.ip':'ポート2 IPアドレス','if2.mask':'ポート2 マスク','fwd':'IPルーティング',
+ 'ip':'IPアドレス','mask':'サブネットマスク','gw':'デフォルトゲートウェイ','dns':'DNSサーバー','mode':'取得方法',
+ 'dhcp.on':'DHCP 有効','dhcp.start':'DHCP 配布開始','dhcp.end':'DHCP 配布終了','dhcp.mask':'DHCP 配るマスク','dhcp.gw':'DHCP 配るゲートウェイ','dhcp.dns':'DHCP 配るDNS',
+ 'dnsSvc.on':'DNSサービス 有効','dnsSvc.records':'DNSレコード','web.http':'HTTP 有効','web.httpPort':'HTTPポート','web.https':'HTTPS 有効','web.httpsPort':'HTTPSポート'};
+function flatDev(o,pre,out){
+  Object.keys(o).forEach(k=>{const v=o[k],key=pre?pre+'.'+k:k;
+    if(k==='apipa')return;
+    if(k==='lease'){out[key]=v?v.ip+' ／ '+v.mask:'なし';return;}
+    if(k==='records'){out[key]=v.map(r=>r.name+'→'+r.ip).join(', ')||'なし';return;}
+    if(v&&typeof v==='object')flatDev(v,key,out);else out[key]=v;});
+  return out;
+}
+function devDiff(S,k,idx){
+  const t=tstate(S,k);if(!t.snap||!t.snap[idx])return null;
+  const a={},b={};const old=JSON.parse(t.snap[idx]);
+  Object.keys(S.dev).forEach(id=>{flatDev(old[id]||{},id,a);flatDev(S.dev[id],id,b);});
+  const fmt=v=>v===true?'ON':v===false?'OFF':(v===''||v==null)?'（空）':String(v);
+  const out=[];
+  Object.keys(b).forEach(key=>{if(String(a[key])!==String(b[key])){
+    const i=key.indexOf('.'),id=key.slice(0,i),f=key.slice(i+1);
+    const lb=f==='lease'?'DHCPでもらった設定':(FLDLBL[f]||f);
+    out.push({dev:DEVLBL[id]||id,f:lb,from:fmt(a[key]),to:fmt(b[key])});}});
+  return out;
+}
+function diffHtml(k,idx){
+  const d=devDiff(S,k,idx);if(!d)return '';
+  const h='<details class="tbox diff" '+(ui.diffOpen?'open':'')+' ontoggle="ui.diffOpen=this.open"><summary>🔍 このステップで変更した設定（'+d.length+'件）／ 開始状態に戻す</summary>'+
+   (d.length?'<table class="sheet"><tr><th>機器</th><th>項目</th><th>開始時</th><th>いま</th></tr>'+d.map(x=>'<tr><td>'+esc(x.dev)+'</td><td>'+esc(x.f)+'</td><td class="m">'+esc(x.from)+'</td><td class="m">'+esc(x.to)+'</td></tr>').join('')+'</table>':'<p class="note">このステップを始めてから、設定はまだ変更していません。</p>')+
+   '<button class="btn ghost" onclick="stepReset('+k+','+idx+')">↺ このステップの開始状態に戻す</button><p class="note">機器の設定が、このステップを始めた時点に戻ります（ミッション全体は戻りません）。</p></details>';
+  return h;
+}
+function stepReset(k,idx){
+  const t=tstate(S,k);if(!t.snap||!t.snap[idx])return;
+  if(!confirm('このステップを始めた時点の設定に戻します。よろしいですか？'))return;
+  S.dev=JSON.parse(t.snap[idx]);
+  t.pf[idx]=S.pings.length;t.wf[idx]=S.webs.length;t.cf[idx]=S.calcs.length;
+  t.hf[idx]={router:S.hist.router.length,server:S.hist.server.length,pc1:S.hist.pc1.length,pc2:S.hist.pc2.length};
+  clearBrowsers();
+  save();ui.msg=null;toast('このステップの開始状態に戻しました');renderAll();
+}
+function tutPick(k,st,p){tstate(S,k).pred[st]=p;save();renderMission();}
+function tutHint(k,st){const t=tstate(S,k);t.hint[st]=(t.hint[st]||0)+1;S.hintsUsed++;save();renderHeader();renderMission();}
+function tutNext(k){
+  const r=tutAdvance(S,k,testOn());
+  if(r==='cleared')toast('🎉 ミッション'+(k+1)+' 達成！');
+  if(r){save();applyFocus();ui.msg=null;renderAll();}
+}
+function tutBack(k){const t=tstate(S,k);if(t.step>0){t.step--;save();applyFocus();ui.msg=null;renderAll();}}
+function tutRestart(k){
+  if(!confirm('このミッションを最初から見直します。機器の設定も、このミッションの開始時点に戻ります。よろしいですか？'))return;
+  delete S.tutM[k];applyBase(S,k);beginMission(S,k);clearBrowsers();
+  Object.keys(TERM).forEach(x=>TERM[x]=[]);
+  save();applyFocus();ui.msg=null;renderAll();
+}
+// ---- 構成図 ----
+function blindNow(){const m=MISSIONS[S.mission],t=tstate(S,S.mission),st=m&&m.tutorial[t.step];return !!(st&&st.blind);}
+function devIpText(id){
+  const e=eff(S,id);
+  if(blindNow())return e.ifs.map(()=>'IP：？');
+  return e.ifs.map(i=>validIf(i)?i.ip:'IP未設定');
+}
+function renderDiagram(){
+  const conf=conflicts(S),confDevs=new Set(conf.flatMap(c=>c.devs));
+  const dim2=S.mission<2;
+  const node=(id,x,y,w,h,icon,lines)=>{
+    const cls='node'+(ui.dev===id?' sel':'')+(confDevs.has(id)?' conf':'');
+    let t='<g class="'+cls+(id==='pc2'&&dim2?' dim':'')+'" data-id="'+id+'" onclick="selDev(\''+id+'\')">'+
+      '<rect class="nbox" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="12"/>'+
+      '<text x="'+(x+w/2)+'" y="'+(y+24)+'" text-anchor="middle" font-size="15" font-weight="700" fill="#12263f">'+icon+' '+DEVS[id].label+(confDevs.has(id)?' ⚠':'')+'</text>';
+    lines.forEach((l,k)=>{t+='<text x="'+(x+w/2)+'" y="'+(y+46+k*18)+'" text-anchor="middle" font-size="12.5" font-family="Consolas,monospace" fill="'+(l.indexOf('未設定')>=0?'#9ca3af':'#1f2937')+'">'+esc(l)+'</text>';});
+    return t+'</g>';
+  };
+  const r=devIpText('router');
+  let s='';
+  s+='<path class="link" d="M160 80 H215 V250 H160"/><path class="link" d="M215 165 H330"/>';
+  s+='<g class="'+(dim2?'dim':'')+'"><path class="link" d="M430 165 H600"/><text class="lan" x="515" y="153" text-anchor="middle">LAN2（営業部）</text></g>';
+  s+='<text class="lan" x="225" y="150">LAN1</text><text class="lan" x="225" y="196">（経理・サーバ室）</text>';
+  s+=node('pc1',40,45,120,70,'🖥',devIpText('pc1'));
+  s+=node('server',40,215,120,70,'🗄',devIpText('server'));
+  s+=node('router',330,125,100,84,'📡',['①'+r[0],'②'+r[1]].map(x=>x.replace('IP未設定','未設定')));
+  s+=node('pc2',600,130,120,70,'🖥',devIpText('pc2'));
+  const fwd=S.dev.router.fwd;
+  s+='<g><rect x="338" y="218" width="84" height="22" rx="11" fill="'+(fwd?'#16a34a':'#9ca3af')+'"/><text x="380" y="234" text-anchor="middle" font-size="12" fill="#fff">転送 '+(fwd?'ON':'OFF')+'</text></g>';
+  const dhcpPcs=['pc1','pc2'].filter(id=>S.dev[id].mode==='dhcp').map(id=>DEVS[id].label+(eff(S,id).apipa?'：自動構成IP(169.254…)':'：DHCP取得')).join(' / ');
+  if(dhcpPcs)s+='<text x="380" y="300" text-anchor="middle" font-size="12" fill="#6b7280">'+esc(dhcpPcs)+'</text>';
+  if(conf.length)s+='<text x="380" y="320" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="700">⚠ IPアドレス競合：'+esc(conf.map(c=>c.ip).join(', '))+'</text>';
+  $('diagram').innerHTML=s;
+}
+function flash(path,ok){
+  path.forEach((d,i)=>setTimeout(()=>{
+    const el=document.querySelector('#diagram g[data-id="'+d+'"]');
+    if(el){el.classList.add(ok?'flash-ok':'flash-ng');setTimeout(()=>el.classList.remove('flash-ok','flash-ng'),700);}
+  },i*250));
+}
+
+// ---- タブ・パネル ----
+function selDev(id){ui.dev=id;ui.msg=null;renderDiagram();renderPanel();}
+function setView(v){ui.view=v;ui.msg=null;renderPanel();}
+function renderTabs(){
+  const cs=new Set(conflicts(S).flatMap(c=>c.devs));
+  $('tabs').innerHTML=Object.keys(DEVS).map(id=>'<button class="'+(ui.dev===id?'on':'')+'" onclick="selDev(\''+id+'\')"><span class="st '+(cs.has(id)?'conf':'')+'"></span>'+DEVS[id].label+'</button>').join('');
+}
+function renderPanel(){
+  renderTabs();
+  if(ui.view==='web'&&!isPC(ui.dev))ui.view='cfg';
+  $('viewsw').innerHTML='<button class="'+(ui.view==='cfg'?'on':'')+'" onclick="setView(\'cfg\')">⚙ 設定画面</button><button class="'+(ui.view==='term'?'on':'')+'" onclick="setView(\'term\')">⌨ ターミナル</button><button class="'+(ui.view==='calc'?'on':'')+'" onclick="setView(\'calc\')">🧮 計算機</button>'+(isPC(ui.dev)?'<button class="'+(ui.view==='web'?'on':'')+'" onclick="setView(\'web\')">🌐 ブラウザ</button>':'');
+  const id=ui.dev;
+  if(ui.view==='term'){renderTerm(id);return;}
+  if(ui.view==='web'){renderBrowser(id);return;}
+  if(ui.view==='calc'){renderCalc();return;}
+  let h='';
+  const cs=conflicts(S).filter(c=>c.devs.includes(id));
+  if(cs.length)h+='<div class="msg err">⚠ IPアドレス '+esc(cs.map(c=>c.ip).join(', '))+' は、同じLAN内の別の機器でも使われています（IPアドレスの競合）。</div>';
+  if(ui.msg)h+='<div class="msg '+ui.msg.type+'">'+ui.msg.lines.map(esc).join('<br>')+'</div>';
+  h+=id==='router'?formRouter():id==='server'?formServer():formPC(id);
+  $('pbody').innerHTML=h;
+  ui.msg=null;
+  if(id!=='router'&&id!=='server')modeToggle();
+}
+const v=x=>esc(x||'');
+function formPC(id){
+  const d=S.dev[id],dh=d.mode==='dhcp';
+  return '<div class="win"><div class="wt">インターネット プロトコル バージョン 4 (TCP/IPv4) のプロパティ — '+DEVS[id].label+'</div><div class="wb">'+
+   '<label class="r"><input type="radio" name="mode" value="dhcp" '+(dh?'checked':'')+' onchange="modeToggle()"> IP アドレスを自動的に取得する(O)</label>'+
+   '<label class="r"><input type="radio" name="mode" value="manual" '+(dh?'':'checked')+' onchange="modeToggle()"> 次の IP アドレスを使う(S):</label>'+
+   '<div class="fld"><span>IP アドレス(I):</span><input type="text" id="f-ip" value="'+v(d.ip)+'" placeholder="例 192.168.1.11">'+
+   '<span>サブネット マスク(U):</span><input type="text" id="f-mask" value="'+v(d.mask)+'">'+
+   '<span>デフォルト ゲートウェイ(D):</span><input type="text" id="f-gw" value="'+v(d.gw)+'"></div>'+
+   '<div class="fld"><span>優先 DNS サーバー(P):</span><input type="text" id="f-dns" value="'+v(d.dns)+'"></div>'+
+   '</div><div class="wf"><button class="btn" onclick="applyPC(\''+id+'\')">OK（適用）</button></div></div>'+
+   '<div class="tip">自動取得にした場合の結果は、ターミナルの <code>ipconfig</code> で確認できます。</div>';
+}
+function modeToggle(){
+  const m=document.querySelector('input[name=mode]:checked');if(!m)return;
+  const dh=m.value==='dhcp';
+  ['f-ip','f-mask','f-gw','f-dns'].forEach(k=>{const e=$(k);if(e)e.disabled=dh;});
+}
+function formRouter(){
+  const r=S.dev.router;
+  return '<div class="win"><div class="wt">ルータ設定画面（簡易）</div><div class="wb">'+
+   '<div class="sec">ポート1（LAN1側）</div><div class="fld wide"><span>IP アドレス:</span><input type="text" id="r1-ip" value="'+v(r.if1.ip)+'"><span>サブネット マスク:</span><input type="text" id="r1-mask" value="'+v(r.if1.mask)+'"></div>'+
+   '<div class="sec">ポート2（LAN2側）</div><div class="fld wide"><span>IP アドレス:</span><input type="text" id="r2-ip" value="'+v(r.if2.ip)+'"><span>サブネット マスク:</span><input type="text" id="r2-mask" value="'+v(r.if2.mask)+'"></div>'+
+   '<div class="sec">ルーティング</div><label class="r"><input type="checkbox" id="r-fwd" '+(r.fwd?'checked':'')+'> IPルーティング（異なるネットワーク間のパケット転送）を有効にする</label>'+
+   '</div><div class="wf"><button class="btn" onclick="applyRouter()">適用</button></div></div>';
+}
+function formServer(){
+  const d=S.dev.server,dh=d.dhcp,dn=d.dnsSvc;
+  let rec='';
+  const rows=dn.records.concat([{name:'',ip:''}]);
+  rows.forEach(r=>{rec+='<div class="recrow"><input class="rn" type="text" value="'+v(r.name)+'" placeholder="名前 例 www.toyosho.example"><input class="ri" type="text" value="'+v(r.ip)+'" placeholder="IPアドレス"></div>';});
+  return '<div class="win"><div class="wt">サーバ設定画面</div><div class="wb">'+
+   '<div class="sec">ネットワーク</div><div class="fld wide"><span>IP アドレス:</span><input type="text" id="s-ip" value="'+v(d.ip)+'"><span>サブネット マスク:</span><input type="text" id="s-mask" value="'+v(d.mask)+'"><span>デフォルト ゲートウェイ:</span><input type="text" id="s-gw" value="'+v(d.gw)+'"></div>'+
+   '<div class="sec">DHCPサービス</div><label class="r"><input type="checkbox" id="dh-on" '+(dh.on?'checked':'')+'> DHCPサービスを有効にする</label>'+
+   '<div class="fld wide"><span>配布開始アドレス:</span><input type="text" id="dh-start" value="'+v(dh.start)+'"><span>配布終了アドレス:</span><input type="text" id="dh-end" value="'+v(dh.end)+'"><span>配るサブネットマスク:</span><input type="text" id="dh-mask" value="'+v(dh.mask)+'"><span>配るゲートウェイ:</span><input type="text" id="dh-gw" value="'+v(dh.gw)+'"><span>配るDNSサーバー:</span><input type="text" id="dh-dns" value="'+v(dh.dns)+'"></div>'+
+   '<div class="sec">DNSサービス</div><label class="r"><input type="checkbox" id="dn-on" '+(dn.on?'checked':'')+'> DNSサービスを有効にする</label>'+
+   '<div class="note">名前とIPアドレスの対応表（レコード）。空の行に入力すると追加、名前を空にすると削除されます。</div>'+rec+
+   webSec(d.web)+'</div><div class="wf"><button class="btn" onclick="applyServer()">適用</button></div></div>';
+}
+function showMsg(type,lines){
+  // エラー表示で画面を描き直しても、入力中の値が消えないように保持する
+  const keep={},rn=[...document.querySelectorAll('#pbody .rn')].map(e=>e.value),ri=[...document.querySelectorAll('#pbody .ri')].map(e=>e.value);
+  document.querySelectorAll('#pbody input[id]').forEach(e=>{keep[e.id]=e.type==='checkbox'?e.checked:e.value;});
+  const md=document.querySelector('#pbody input[name=mode]:checked'),mode=md?md.value:null;
+  ui.msg={type,lines};renderPanel();
+  Object.keys(keep).forEach(k=>{const e=$(k);if(e){if(e.type==='checkbox')e.checked=keep[k];else e.value=keep[k];}});
+  [...document.querySelectorAll('#pbody .rn')].forEach((e,i)=>{if(rn[i]!=null)e.value=rn[i];});
+  [...document.querySelectorAll('#pbody .ri')].forEach((e,i)=>{if(ri[i]!=null)e.value=ri[i];});
+  if(mode){const r=document.querySelector('#pbody input[name=mode][value='+mode+']');if(r){r.checked=true;if(typeof modeToggle==='function')modeToggle();}}
+}
+const gv=id=>($(id)?$(id).value.trim():'');
+// ---- 入力の妥当性チェック（実務で起こる設定ミスを、適用の時点で検出する） ----
+function addrProblem(ip,mask,label){
+  const n=ip2n(ip);if(n===null||!maskOk(mask))return '';
+  const p=parsePrefix(mask);if(p===null||p>=31)return '';
+  const m=ip2n(mask),net=(n&m)>>>0,bc=(net|((~m)>>>0))>>>0;
+  if(n===net)return label+'「'+ip+'」は、このネットワークの<b>ネットワークアドレス</b>です。機器には設定できません（ホスト部が全部0）';
+  if(n===bc)return label+'「'+ip+'」は、このネットワークの<b>ブロードキャストアドレス</b>です。機器には設定できません（ホスト部が全部1）';
+  return '';
+}
+function gwProblem(ip,mask,gw){
+  if(!gw||ip2n(gw)===null||ip2n(ip)===null||!maskOk(mask))return '';
+  if(!sameNet(ip,gw,mask))return 'ゲートウェイ「'+gw+'」が、自分のIPアドレス（'+ip+' ／ '+mask+'）と同じネットワークにありません。ゲートウェイは、同じネットワーク内のルータのアドレスにします';
+  if(gw===ip)return 'ゲートウェイが自分自身のIPアドレスと同じです';
+  return addrProblem(gw,mask,'ゲートウェイ');
+}
+function applyPC(id){
+  const mode=document.querySelector('input[name=mode]:checked').value,d=S.dev[id],errs=[];
+  if(mode==='manual'){
+    const ip=gv('f-ip'),mask=gv('f-mask'),gw=gv('f-gw'),dns=gv('f-dns');
+    if(ip2n(ip)===null)errs.push('IP アドレスの形式が正しくありません（例: 192.168.1.11）');
+    if(!maskOk(mask))errs.push('サブネット マスクが正しくありません（例: 255.255.255.0）');
+    if(gw&&ip2n(gw)===null)errs.push('デフォルト ゲートウェイの形式が正しくありません');
+    if(dns&&ip2n(dns)===null)errs.push('DNS サーバーの形式が正しくありません');
+    if(!errs.length){[addrProblem(ip,mask,'IPアドレス'),gwProblem(ip,mask,gw)].forEach(x=>{if(x)errs.push(x);});}
+    if(errs.length){showMsg('err',errs);return;}
+    Object.assign(d,{mode:'manual',ip,mask,gw,dns,lease:null});
+    ui.msg={type:'okm',lines:['設定を適用しました。']};
+  }else{
+    d.mode='dhcp';const r=renew(S,id);
+    ui.msg=r.ok?{type:'okm',lines:['DHCPサーバーからアドレスを取得しました。（ipconfig で確認できます）']}:
+      {type:'warn',lines:['DHCPサーバーからアドレスを取得できませんでした。自動構成のIPアドレス（169.254.x.x）になっています。']};
+  }
+  afterChange();renderPanel();
+}
+function applyRouter(){
+  const r=S.dev.router,errs=[];
+  const a=gv('r1-ip'),am=gv('r1-mask'),b=gv('r2-ip'),bm=gv('r2-mask');
+  if(a&&ip2n(a)===null)errs.push('ポート1のIPアドレスの形式が正しくありません');
+  if(b&&ip2n(b)===null)errs.push('ポート2のIPアドレスの形式が正しくありません');
+  if(!maskOk(am))errs.push('ポート1のサブネットマスクが正しくありません');
+  if(!maskOk(bm))errs.push('ポート2のサブネットマスクが正しくありません');
+  if(!errs.length){
+    [addrProblem(a,am,'ポート1のIPアドレス'),addrProblem(b,bm,'ポート2のIPアドレス')].forEach(x=>{if(x)errs.push(x);});
+    if(a&&b&&ip2n(a)!==null&&ip2n(b)!==null){const mm=(ip2n(am)&ip2n(bm))>>>0;
+      if(((ip2n(a)&mm)>>>0)===((ip2n(b)&mm)>>>0))errs.push('ポート1とポート2のネットワークが重なっています。ルータの各ポートは、別々のネットワーク（重ならないサブネット）に置きます');}
+  }
+  if(errs.length){showMsg('err',errs);return;}
+  r.if1={ip:a,mask:am};r.if2={ip:b,mask:bm};r.fwd=$('r-fwd').checked;
+  ui.msg={type:'okm',lines:['設定を適用しました。']};
+  afterChange();renderPanel();
+}
+function applyServer(){
+  const d=S.dev.server,errs=[];
+  const ip=gv('s-ip'),mask=gv('s-mask'),gw=gv('s-gw');
+  if(ip2n(ip)===null)errs.push('サーバのIPアドレスの形式が正しくありません');
+  if(!maskOk(mask))errs.push('サーバのサブネットマスクが正しくありません');
+  if(gw&&ip2n(gw)===null)errs.push('サーバのゲートウェイの形式が正しくありません');
+  const dh={on:$('dh-on').checked,start:gv('dh-start'),end:gv('dh-end'),mask:gv('dh-mask'),gw:gv('dh-gw'),dns:gv('dh-dns')};
+  ['start','end','gw','dns'].forEach(k=>{if(dh[k]&&ip2n(dh[k])===null)errs.push('DHCPの「'+({start:'配布開始',end:'配布終了',gw:'ゲートウェイ',dns:'DNS'}[k])+'」の形式が正しくありません');});
+  if(!errs.length){
+    [addrProblem(ip,mask,'サーバのIPアドレス'),gwProblem(ip,mask,gw)].forEach(x=>{if(x)errs.push(x);});
+    if(dh.on){
+      if(!maskOk(dh.mask))errs.push('DHCPの「配るサブネットマスク」が正しくありません（例: 255.255.255.0）');
+      else if(dh.start&&dh.end){
+        const a=ip2n(dh.start),b=ip2n(dh.end),m=ip2n(dh.mask);
+        if(a>b)errs.push('DHCPの配布開始が配布終了より後になっています');
+        else{
+          const ref=dh.gw||ip;
+          if(!sameNet(dh.start,ref,dh.mask)||!sameNet(dh.end,ref,dh.mask))errs.push('DHCPの配布範囲が、配るゲートウェイ（'+ref+'）と同じネットワークの内側にありません');
+          const net=(a&m)>>>0,bc=(net|((~m)>>>0))>>>0;
+          if(a<=net&&net<=b)errs.push('DHCPの配布範囲に、ネットワークアドレス（'+n2ip(net)+'）が含まれています');
+          if(a<=bc&&bc<=b)errs.push('DHCPの配布範囲に、ブロードキャストアドレス（'+n2ip(bc)+'）が含まれています');
+          const fixed=[ip,dh.gw,S.dev.router.if1.ip,S.dev.router.if2.ip].filter(x=>x&&ip2n(x)!==null);
+          [...new Set(fixed)].forEach(f=>{const x=ip2n(f);if(x>=a&&x<=b)errs.push('DHCPの配布範囲に、固定で使っているアドレス '+f+' が含まれています（競合のもとです）');});
+        }
+      }
+    }
+  }
+  const names=[...document.querySelectorAll('.rn')],ips=[...document.querySelectorAll('.ri')],records=[];
+  names.forEach((n,k)=>{const nm=n.value.trim(),ad=ips[k].value.trim();
+    if(!nm)return;
+    if(ip2n(ad)===null)errs.push('レコード「'+nm+'」のIPアドレスの形式が正しくありません');
+    else records.push({name:nm,ip:ad});});
+  const web={http:$('w-http').checked,httpPort:gv('w-http-port'),https:$('w-https').checked,httpsPort:gv('w-https-port')};
+  ['httpPort','httpsPort'].forEach(k=>{const n=/^\d{1,5}$/.test(web[k])?parseInt(web[k],10):0;
+    if(n<1||n>65535)errs.push((k==='httpPort'?'HTTP':'HTTPS')+'のポート番号は 1〜65535 の数字で入力してください');else web[k]=String(n);});
+  if(errs.length){showMsg('err',errs);return;}
+  Object.assign(d,{ip,mask,gw});d.dhcp=dh;d.dnsSvc={on:$('dn-on').checked,records};d.web=web;
+  ui.msg={type:'okm',lines:['設定を適用しました。（DHCPで配る内容を変えたときは、PC側で ipconfig /renew が必要です）']};
+  afterChange();renderPanel();
+}
+
+// ---- ブラウザ・Webサービス設定 ----
+const BR={};
+function isPC(id){return id==='pc1'||id==='pc2';}
+function clearBrowsers(){Object.keys(BR).forEach(k=>delete BR[k]);}
+function webSec(w){
+  w=w||{http:false,httpPort:'80',https:false,httpsPort:'443'};
+  const st='style="width:72px;font-family:Consolas,monospace"';
+  return '<div class="sec">Webサービス</div>'+
+   '<label class="r"><input type="checkbox" id="w-http" '+(w.http?'checked':'')+'> HTTPサービスを有効にする　ポート番号：<input type="text" id="w-http-port" '+st+' value="'+v(w.httpPort)+'"></label>'+
+   '<label class="r"><input type="checkbox" id="w-https" '+(w.https?'checked':'')+'> HTTPSサービスを有効にする　ポート番号：<input type="text" id="w-https-port" '+st+' value="'+v(w.httpsPort)+'"></label>';
+}
+function pageHtml(id,b){
+  const r=b&&b.res;
+  if(!r)return '<p class="note">アドレスバーにURLを入力して「開く」を押してください。<br>例：<code>http://www.toyosho.example</code></p>';
+  const H=esc(r.host);
+  const err=(t,sub,code)=>'<div class="errpage"><div class="ico">😕</div><h1>'+t+'</h1><p>'+sub+'</p><code>'+code+'</code></div>';
+  switch(r.kind){
+    case 'ok':return '<h1>'+esc(r.page.title)+'</h1><ul>'+r.page.lines.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
+    case 'notfound':return '<h1>404 Not Found</h1><p>要求されたページは、このサーバーには見つかりませんでした。</p>';
+    case 'badreq':return '<h1>400 Bad Request</h1><p>HTTPSの窓口に、暗号化されていない（http の）要求が送られました。</p>';
+    case 'noname':return err('このサイトにアクセスできません','<b>'+H+'</b> のDNSアドレスが見つかりませんでした。','ERR_NAME_NOT_RESOLVED');
+    case 'timeout':return err('このサイトにアクセスできません','<b>'+H+'</b> からの応答時間が長すぎます。','ERR_CONNECTION_TIMED_OUT');
+    case 'refused':return err('このサイトにアクセスできません','<b>'+H+'</b> で接続が拒否されました。','ERR_CONNECTION_REFUSED');
+    case 'sslerr':return err('このサイトは安全に接続できません','<b>'+H+'</b> が無効な応答を送信しました。','ERR_SSL_PROTOCOL_ERROR');
+    case 'cert':return '<div class="errpage"><div class="ico">⚠️</div><h1>接続のプライバシーが保護されていません</h1><p><b>'+H+'</b> に対する攻撃者が、情報（パスワードなど）を盗み取ろうとしている可能性があります。</p><code>NET::ERR_CERT_COMMON_NAME_INVALID</code><p style="margin-top:12px"><button class="btn ghost" onclick="browseInsecure(\''+id+'\')">詳細設定 → '+H+' にアクセスする（安全ではありません）</button></p></div>';
+    default:return err('URLの形式が正しくありません','入力を確認してください。','ERR_INVALID_URL');
+  }
+}
+function renderBrowser(id){
+  const b=BR[id]||{},r=b.res;
+  let sec='';
+  if(r){
+    if(r.scheme==='https'&&r.kind==='cert')sec='<span class="bsec ng">⚠ 保護されていません</span>';
+    else if(r.scheme==='https'&&(r.kind==='ok'||r.kind==='notfound'))sec=r.insecure?'<span class="bsec ng">⚠ 証明書エラー</span>':'<span class="bsec ok">🔒 保護された通信</span>';
+    else if(r.scheme==='http'&&(r.kind==='ok'||r.kind==='notfound'))sec='<span class="bsec warn">保護されていない通信</span>';
+  }
+  $('pbody').innerHTML='<div class="browser"><div class="bbar">'+sec+'<input id="b-url" autocomplete="off" spellcheck="false" value="'+esc(b.input||'')+'" placeholder="http://www.toyosho.example"><button class="btn" onclick="browseGo(\''+id+'\',$(\'b-url\').value)">開く</button></div><div class="bpage">'+pageHtml(id,b)+'</div></div>'+
+    '<div class="tip">'+DEVS[id].label+'のブラウザです。名前やIPアドレスを指定して開けます（例：<code>https://192.168.1.10:8443</code>）。</div>';
+  const inp=$('b-url');
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')browseGo(id,inp.value);});
+}
+function browseGo(id,url,insecure){
+  url=(url||'').trim();if(!url)return;
+  const r=httpGet(S,id,url,{insecure:!!insecure});
+  r.insecure=!!insecure&&r.kind==='ok'&&r.scheme==='https'&&ip2n(r.host)!==null;
+  logWeb(S,id,r,'browser');
+  BR[id]={input:url,res:r};
+  if(r.route)flash(r.route,r.kind==='ok'||r.kind==='notfound');
+  afterChange();renderPanel();
+}
+function browseInsecure(id){const b=BR[id];if(b&&b.res)browseGo(id,b.res.url,true);}
+
+// ---- サブネット計算機・計算問題の画面 ----
+const CALC={ip:'192.168.1.10',mask:'/24'};
+function renderCalc(){
+  $('pbody').innerHTML='<div class="calc"><div class="note">実務では「サブネット計算ツール」で確認します。まず自分で計算してから、答え合わせに使いましょう。</div>'+
+   '<div class="fld wide"><span>IPアドレス：</span><input type="text" id="c-ip" autocomplete="off" value="'+esc(CALC.ip)+'" oninput="calcInput()">'+
+   '<span>マスク（/26 でも 255.255.255.192 でも可）：</span><input type="text" id="c-mask" autocomplete="off" value="'+esc(CALC.mask)+'" oninput="calcInput()"></div>'+
+   '<div id="c-out"></div></div>';
+  calcShow(false);
+}
+function calcInput(){CALC.ip=$('c-ip').value.trim();CALC.mask=$('c-mask').value.trim();calcShow(true);}
+function calcShow(log){
+  const out=$('c-out');if(!out)return;
+  const ip=ip2n(_fw(CALC.ip)),p=parsePrefix(CALC.mask);
+  if(ip===null||p===null){out.innerHTML='<div class="msg warn">IPアドレスと、マスク（/0〜/32 または 255.255.255.x）を入力してください。</div>';return;}
+  const ipS=_fw(CALC.ip),r=subnetInfo(ipS,p);
+  if(log){
+    const last=S.calcs[S.calcs.length-1];
+    if(!last||last.ip!==ipS||last.prefix!==p){S.calcs.push({ip:ipS,prefix:p});if(S.calcs.length>200)S.calcs.shift();save();renderMission();}
+  }
+  const u=p>=31?(p===31?'2台（2点間の専用リンク用）':'1台'):'2<sup>'+r.h+'</sup> − 2 = <b>'+r.usable+' 台</b>';
+  out.innerHTML='<div class="bitrow"><span class="bl">IPアドレス（2進数）　'+esc(ipS)+'</span><div class="bits">'+bitsHtml(ipS,p)+'</div></div>'+
+   '<div class="bitrow"><span class="bl">サブネットマスク（2進数）　'+n2ip(r.mask)+'</span><div class="bits">'+bitsHtml(n2ip(r.mask),p)+'</div></div>'+
+   '<div class="note"><span class="o net">青</span>＝ネットワーク部（町名）　<span class="o host">橙</span>＝ホスト部（番地）</div>'+
+   '<table class="calct">'+
+   '<tr><th>サブネットマスク</th><td class="m">'+n2ip(r.mask)+'（/'+p+'）</td></tr>'+
+   '<tr><th>ホスト部のビット数</th><td>'+r.h+' ビット（2<sup>'+r.h+'</sup> = '+r.tot+' 個のアドレス）</td></tr>'+
+   '<tr><th>ネットワークアドレス</th><td class="m">'+n2ip(r.net)+'</td></tr>'+
+   '<tr><th>ブロードキャスト</th><td class="m">'+n2ip(r.bc)+'</td></tr>'+
+   '<tr><th>使えるアドレスの範囲</th><td class="m">'+n2ip(r.first)+' 〜 '+n2ip(r.last)+'</td></tr>'+
+   '<tr><th>使える台数</th><td>'+u+'</td></tr></table>';
+}
+function quizHtml(k,idx,st){
+  const t=tstate(S,k),A=t.quiz[idx]||{},O=t.qok[idx]||{};
+  let h='<div class="tbox quiz"><b>✏️ '+(st.quiz.title||'自分で答えよう')+'</b>';
+  st.quiz.items.forEach(it=>{
+    const val=A[it.id]!=null?A[it.id]:'';
+    let mark='',fb='';
+    if(O[it.id]===true){mark='<span class="qm ok">✓ 正解</span>';if(it.exp)fb='<div class="qexp">'+it.exp+'</div>';}
+    else if(O[it.id]===false){mark='<span class="qm ng">✗ もう一度</span>';if(it.hint)fb='<div class="qhint">ヒント：'+it.hint+'</div>';}
+    h+='<div class="qi"><div class="ql">'+it.q+'</div>';
+    if(it.type==='choice'){
+      h+=it.opts.map((o,j)=>'<label class="qo"><input type="radio" name="q-'+idx+'-'+it.id+'" '+(String(val)===String(j)?'checked':'')+' onchange="quizSet('+k+','+idx+',\''+it.id+'\',\''+j+'\')"> '+esc(o)+'</label>').join('');
+    }else{
+      h+='<input class="qin" type="text" autocomplete="off" value="'+esc(val)+'" placeholder="'+esc(it.ph||'')+'" oninput="quizSet('+k+','+idx+',\''+it.id+'\',this.value)">';
+    }
+    h+=mark+fb+'</div>';
+  });
+  return h+'<button class="btn" onclick="quizCheck('+k+','+idx+')">答え合わせ</button></div>';
+}
+function quizSet(k,idx,id,val){
+  const t=tstate(S,k);(t.quiz[idx]=t.quiz[idx]||{})[id]=val;
+  if(t.qok[idx])delete t.qok[idx][id];
+  save();
+}
+function quizCheck(k,idx){
+  const all=qCheck(S,k,idx);save();renderMission();
+  if(all)toast('✓ すべて正解です！');
+}
+
+// ---- ターミナル ----
+function banner(id){
+  if(TERM[id].length)return;
+  TERM[id].push(id==='router'?'ルータ コンソール（演習用）。  help で使えるコマンドを表示します。':'ネットワーク演習用コマンドプロンプト。  help で使えるコマンドを表示します。','');
+}
+function renderTerm(id){
+  banner(id);
+  $('pbody').innerHTML='<div class="term" id="termout" onclick="$(\'cmd\').focus()"></div><div class="termin"><span>'+esc(PROMPT[id])+'</span><input id="cmd" autocomplete="off" spellcheck="false" autocapitalize="off"></div>'+
+    '<div class="tip">'+(id==='router'?'使えるコマンド： ping / show ip interface brief / cls':'使えるコマンド： ipconfig [/all /renew /release] / ping / nslookup / tracert / curl / cls')+'　（↑↓で履歴）</div>';
+  paintTerm();
+  const inp=$('cmd');inp.disabled=!!BUSY[id];
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){const l=inp.value;inp.value='';HIST_IDX[id]=null;runCommand(id,l);}
+    else if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+      const h=S.hist[id];if(!h.length)return;
+      let k=HIST_IDX[id];if(k==null)k=h.length;
+      k+=e.key==='ArrowUp'?-1:1;k=Math.max(0,Math.min(h.length,k));HIST_IDX[id]=k;
+      inp.value=k===h.length?'':h[k];e.preventDefault();
+    }
+  });
+  if(!BUSY[id])inp.focus();
+}
+function paintTerm(){const el=$('termout');if(!el)return;el.textContent=TERM[ui.dev].join('\n');el.scrollTop=el.scrollHeight;}
+function termPush(id,l){TERM[id].push(l);if(ui.dev===id&&ui.view==='term')paintTerm();}
+function setBusy(id,b){BUSY[id]=b;if(ui.dev===id&&ui.view==='term'){const i=$('cmd');if(i){i.disabled=b;if(!b)i.focus();}}}
+async function runCommand(id,line){
+  if(BUSY[id])return;
+  const t=line.trim();
+  termPush(id,PROMPT[id]+line);
+  if(!t)return;
+  S.hist[id].push(t);if(S.hist[id].length>1000)S.hist[id].shift();
+  const parts=t.split(/\s+/),c=parts[0].toLowerCase(),argv=parts.slice(1);
+  setBusy(id,true);
+  try{
+    if(c==='cls'||c==='clear'){TERM[id].length=0;paintTerm();}
+    else if(id==='router'){
+      if(c==='ping'){const L=planPingRouter(S,argv);L.forEach(l=>termPush(id,l));logPing(S,'router',L.meta);}
+      else if(c==='show'&&argv.join(' ').toLowerCase().startsWith('ip int')){routerBrief(S).forEach(l=>termPush(id,l));}
+      else if(c==='help'||c==='?'){termPush(id,'ping <IPアドレス>\nshow ip interface brief\ncls');}
+      else termPush(id,"% Invalid input detected at '^' marker.");
+    }else{
+      if(c==='ping'){
+        const p=planPing(S,id,argv);
+        p.head.forEach(l=>termPush(id,l));
+        let first=true;
+        for(const r of p.replies){await sleep(420);termPush(id,r.text);if(first){flash(r.path,r.ok);first=false;}}
+        p.tail.forEach(l=>termPush(id,l));
+        logPing(S,id,p.meta);
+      }
+      else if(c==='ipconfig'){runIpconfig(S,id,argv).forEach(l=>termPush(id,l));}
+      else if(c==='nslookup'){planNslookup(S,id,argv).forEach(l=>termPush(id,l));}
+      else if(c==='curl'){const cu=planCurl(S,id,argv);cu.lines.forEach(l=>termPush(id,l));logWeb(S,id,cu.res,'curl');}
+      else if(c==='tracert'){planTracert(S,id,argv).forEach(l=>termPush(id,l));}
+      else if(c==='help'){termPush(id,'ipconfig [/all | /renew | /release]\nping [-n 回数] 宛先\nnslookup 名前\ntracert 宛先\ncurl [-i] [-k] URL\ncls');}
+      else termPush(id,"'"+parts[0]+"' は、内部コマンドまたは外部コマンド、操作可能なプログラムまたはバッチ ファイルとして認識されていません。");
+    }
+  }finally{setBusy(id,false);}
+  afterChange();
+}
+
+// ---- 全体 ----
+function renderAll(){renderHeader();renderDiagram();renderMission();renderPanel();}
+function resetAll(){
+  if(!confirm('設定も進み具合もすべて消して、最初からやり直しますか？'))return;
+  S=freshState();beginMission(S,0);Object.keys(TERM).forEach(k=>TERM[k]=[]);clearBrowsers();save();ui.dev='pc1';ui.view='cfg';ui.msg=null;applyFocus();renderAll();
+}
+beginMission(S,Math.min(S.mission||0,MISSIONS.length-1));
+save();
+applyFocus();
+renderAll();
+</script>
+</body>
+</html>
